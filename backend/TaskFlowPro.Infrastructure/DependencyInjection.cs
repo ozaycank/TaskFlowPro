@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<ITaskItemRepository, TaskItemRepository>();
+        services.AddScoped<IWorkspaceMemberRepository, WorkspaceMemberRepository>();
 
         // Note: ICurrentUserService and IDateTimeProvider are not registered here.
         // ICurrentUserService depends on HttpContext (API Layer).
