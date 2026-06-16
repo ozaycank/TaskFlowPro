@@ -4,7 +4,7 @@ namespace TaskFlowPro.Domain.Entities;
 
 public class Workspace : AuditableEntity
 {
-    public string Name { get; private set; }
+    public string Name { get; private set; } = null!;
     public string? Description { get; private set; }
     public Guid OwnerId { get; private set; }
 
