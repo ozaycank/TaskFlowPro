@@ -42,6 +42,7 @@ app.UseExceptionHandler();
 // Map Endpoints
 app.MapWorkspaceEndpoints();
 app.MapProjectEndpoints();
+app.MapTaskEndpoints();
 
 if (app.Environment.IsDevelopment())
 {
