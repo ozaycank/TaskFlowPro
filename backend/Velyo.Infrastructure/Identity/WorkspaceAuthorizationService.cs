@@ -1,6 +1,7 @@
 using Velyo.Application.Common.Exceptions;
 using Velyo.Application.Common.Interfaces.Repositories;
 using Velyo.Application.Common.Interfaces.Services;
+using Velyo.Domain.Enums;
 
 namespace Velyo.Infrastructure.Identity;
 
@@ -38,10 +39,17 @@ public class WorkspaceAuthorizationService : IWorkspaceAuthorizationService
         return isMember;
     }
 
-    public Task<bool> HasRoleAsync(Guid workspaceId, int requiredRole, CancellationToken cancellationToken = default)
+    public async Task<bool> HasRoleAsync(Guid workspaceId, WorkspaceRole requiredRole, CancellationToken cancellationToken = default)
     {
-        // Placeholder for future RBAC implementation
-        throw new NotImplementedException("Role-based authorization is planned for a future phase.");
+        if (string.IsNullOrEmpty(_currentUserService.UserId) || !Guid.TryParse(_currentUserService.UserId, out var userId))
+            return false;
+
+        var member = await _workspaceMemberRepository.GetMemberAsync(workspaceId, userId, cancellationToken);
+        if (member == null) return false;
+
+        // FIXED: Sizin Enum yapınızda sayı KÜÇÜLDÜKÇE yetki ARTIYOR (Owner=1, Admin=2).
+        // Bu yüzden kullanıcının rol numarası, istenen rol numarasından KÜÇÜK VEYA EŞİT olmalıdır.
+        return (int)member.Role <= (int)requiredRole;
     }
 
     public async Task AuthorizeMembershipAsync(Guid workspaceId, CancellationToken cancellationToken = default)
@@ -50,6 +58,15 @@ public class WorkspaceAuthorizationService : IWorkspaceAuthorizationService
         if (!isAuthorized)
         {
             throw new ForbiddenAccessException("You do not have permission to access or modify resources in this workspace.");
+        }
+    }
+
+    public async Task AuthorizeRoleAsync(Guid workspaceId, WorkspaceRole requiredRole, CancellationToken cancellationToken = default)
+    {
+        var hasRole = await HasRoleAsync(workspaceId, requiredRole, cancellationToken);
+        if (!hasRole)
+        {
+            throw new ForbiddenAccessException($"You must be an {requiredRole} to perform this action.");
         }
     }
 }

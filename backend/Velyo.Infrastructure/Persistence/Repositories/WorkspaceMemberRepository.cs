@@ -25,9 +25,21 @@ public class WorkspaceMemberRepository : IWorkspaceMemberRepository
             .ToListAsync(cancellationToken);
     }
 
+    // YENİ EKLENEN METOT: Tekil üyeyi bulmak için kullanılır. (Authorization için çok kritik)
+    public async Task<WorkspaceMember?> GetMemberAsync(Guid workspaceId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.WorkspaceMembers
+            .FirstOrDefaultAsync(wm => wm.WorkspaceId == workspaceId && wm.UserId == userId, cancellationToken);
+    }
+
     public void Add(WorkspaceMember workspaceMember)
     {
         _context.WorkspaceMembers.Add(workspaceMember);
+    }
+
+    public void Remove(WorkspaceMember member)
+    {
+        _context.WorkspaceMembers.Remove(member);
     }
 
     public void Update(WorkspaceMember workspaceMember)
@@ -39,6 +51,7 @@ public class WorkspaceMemberRepository : IWorkspaceMemberRepository
     {
         _context.WorkspaceMembers.Remove(workspaceMember);
     }
+
     public async Task<bool> IsUserMemberAsync(Guid workspaceId, Guid userId, CancellationToken cancellationToken = default)
     {
         return await _context.WorkspaceMembers

@@ -1,7 +1,9 @@
 ﻿using MediatR;
 using Velyo.Application.Workspaces.Commands.CreateWorkspace;
 using Velyo.Application.Workspaces.Queries.GetWorkspaces; // Added query namespace
-
+using Velyo.Application.Workspaces.Commands.InviteMember;
+using Velyo.Application.Workspaces.Commands.AcceptInvitation;
+using Velyo.Application.Workspaces.Commands.RemoveMember;
 namespace Velyo.Api.Endpoints;
 
 public static class WorkspaceEndpoints
@@ -27,6 +29,29 @@ public static class WorkspaceEndpoints
         })
         .WithName("GetWorkspaces")
         .WithOpenApi();
+
+        // POST /api/workspaces/{workspaceId}/invitations
+        group.MapPost("/{workspaceId:guid}/invitations", async (Guid workspaceId, InviteMemberCommand command, IMediator mediator) =>
+        {
+            if (workspaceId != command.WorkspaceId) return Results.BadRequest();
+            var token = await mediator.Send(command);
+            return Results.Ok(new { InvitationToken = token });
+        });
+
+        // POST /api/workspaces/invitations/accept
+        group.MapPost("/invitations/accept", async (AcceptInvitationCommand command, IMediator mediator) =>
+        {
+            await mediator.Send(command);
+            return Results.Ok(new { Message = "Successfully joined the workspace." });
+        });
+
+        // DELETE /api/workspaces/{workspaceId}/members/{userId}
+        group.MapDelete("/{workspaceId:guid}/members/{userId:guid}", async (Guid workspaceId, Guid userId, IMediator mediator) =>
+        {
+            await mediator.Send(new RemoveMemberCommand(workspaceId, userId));
+            return Results.NoContent();
+        });
+
         return group;
     }
 }

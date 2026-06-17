@@ -23,7 +23,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<WorkspaceMember> WorkspaceMembers => Set<WorkspaceMember>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<TaskItem> TaskItems => Set<TaskItem>();
-
+    public DbSet<WorkspaceInvitation> WorkspaceInvitations => Set<WorkspaceInvitation>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         // FIXED: EF Core'a DomainEvent sÄ±nÄ±fÄ±nÄ± veritabanÄ± modeli olarak taramamasÄ±nÄ± sÃ¶ylÃ¼yoruz.
