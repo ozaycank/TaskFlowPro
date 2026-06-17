@@ -1,16 +1,29 @@
-﻿namespace Velyo.Domain.Common.Models;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Velyo.Domain.Common.Interfaces;
 
-public abstract class Entity
+namespace Velyo.Domain.Common.Models;
+
+public abstract class Entity : IHasDomainEvents
 {
-    // Using Guid for scalable SaaS multi-tenancy to prevent ID guessing
     public Guid Id { get; protected set; }
 
     private readonly List<DomainEvent> _domainEvents = new();
-    
-    // Encapsulate the collection so it cannot be modified directly from the outside
+
+    [NotMapped]
     public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
-    public void AddDomainEvent(DomainEvent domainEvent) => _domainEvents.Add(domainEvent);
-    public void RemoveDomainEvent(DomainEvent domainEvent) => _domainEvents.Remove(domainEvent);
-    public void ClearDomainEvents() => _domainEvents.Clear();
+    public void AddDomainEvent(DomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+
+    public void RemoveDomainEvent(DomainEvent domainEvent)
+    {
+        _domainEvents.Remove(domainEvent);
+    }
+
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
+    }
 }

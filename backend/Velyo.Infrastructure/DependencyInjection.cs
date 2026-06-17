@@ -21,7 +21,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        
+        services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<IProjectRepository, ProjectRepository>();

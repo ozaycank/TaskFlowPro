@@ -2,8 +2,8 @@
 
 public enum WorkspaceRole
 {
-    Owner = 1,
-    Admin = 2,
-    Member = 3,
-    Viewer = 4
+    Viewer = 10,
+    Member = 20,
+    Admin = 30,
+    Owner = 40
 }

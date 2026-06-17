@@ -1,42 +1,68 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Velyo.Domain.Entities;
-using Velyo.Domain.Common.Models; // DomainEvent'i tanÄ±yabilmesi iÃ§in ekledik
+using Velyo.Domain.Common.Models;
+using Velyo.Domain.Common.Interfaces; // EKSİK OLAN REFERANS EKLENDİ
 using Velyo.Infrastructure.Persistence.Interceptors;
 using System.Reflection;
+using MediatR;
 
 namespace Velyo.Infrastructure.Persistence;
 
 public class ApplicationDbContext : DbContext
 {
     private readonly AuditableEntityInterceptor _auditableEntityInterceptor;
+    private readonly IMediator _mediator;
 
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        AuditableEntityInterceptor auditableEntityInterceptor)
+        AuditableEntityInterceptor auditableEntityInterceptor,
+        IMediator mediator)
         : base(options)
     {
         _auditableEntityInterceptor = auditableEntityInterceptor;
+        _mediator = mediator;
     }
 
+    public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Workspace> Workspaces => Set<Workspace>();
     public DbSet<WorkspaceMember> WorkspaceMembers => Set<WorkspaceMember>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<TaskItem> TaskItems => Set<TaskItem>();
     public DbSet<WorkspaceInvitation> WorkspaceInvitations => Set<WorkspaceInvitation>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        // FIXED: EF Core'a DomainEvent sÄ±nÄ±fÄ±nÄ± veritabanÄ± modeli olarak taramamasÄ±nÄ± sÃ¶ylÃ¼yoruz.
         builder.Ignore<DomainEvent>();
-
-        // Assemblies iÃ§indeki IEntityTypeConfiguration'larÄ± yÃ¼kler
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
         base.OnModelCreating(builder);
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.AddInterceptors(_auditableEntityInterceptor);
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var entitiesWithEvents = ChangeTracker.Entries<IHasDomainEvents>()
+            .Where(e => e.Entity.DomainEvents.Any())
+            .Select(e => e.Entity)
+            .ToList();
+
+        var domainEvents = entitiesWithEvents
+            .SelectMany(e => e.DomainEvents)
+            .ToList();
+
+        entitiesWithEvents.ForEach(e => e.ClearDomainEvents());
+
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        foreach (var domainEvent in domainEvents)
+        {
+            await _mediator.Publish(domainEvent, cancellationToken);
+        }
+
+        return result;
     }
 }

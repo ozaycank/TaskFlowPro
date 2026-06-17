@@ -47,9 +47,7 @@ public class WorkspaceAuthorizationService : IWorkspaceAuthorizationService
         var member = await _workspaceMemberRepository.GetMemberAsync(workspaceId, userId, cancellationToken);
         if (member == null) return false;
 
-        // FIXED: Sizin Enum yapınızda sayı KÜÇÜLDÜKÇE yetki ARTIYOR (Owner=1, Admin=2).
-        // Bu yüzden kullanıcının rol numarası, istenen rol numarasından KÜÇÜK VEYA EŞİT olmalıdır.
-        return (int)member.Role <= (int)requiredRole;
+        return (int)member.Role >= (int)requiredRole;
     }
 
     public async Task AuthorizeMembershipAsync(Guid workspaceId, CancellationToken cancellationToken = default)

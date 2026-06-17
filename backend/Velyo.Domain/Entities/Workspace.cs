@@ -1,4 +1,5 @@
 ﻿using Velyo.Domain.Common.Models;
+using Velyo.Domain.Events; // YENİ: Application değil Domain Event referansı
 
 namespace Velyo.Domain.Entities;
 
@@ -20,7 +21,11 @@ public class Workspace : AuditableEntity
 
     public static Workspace Create(string name, string? description, Guid ownerId)
     {
-        return new Workspace(name, description, ownerId);
+        var workspace = new Workspace(name, description, ownerId);
+
+        workspace.AddDomainEvent(new WorkspaceCreatedEvent(workspace, ownerId));
+
+        return workspace;
     }
 
     public void UpdateDetails(string name, string? description)
