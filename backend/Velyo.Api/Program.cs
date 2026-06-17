@@ -1,4 +1,5 @@
 ﻿using Velyo.Api.Endpoints;
+using Velyo.Api.Extensions;
 using Velyo.Api.Middleware;
 using Velyo.Api.Services;
 using Velyo.Application;
@@ -12,15 +13,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Core Services
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddVelyoSwagger(); // Extracted Swagger config
+builder.Services.AddVelyoCors(builder.Configuration); // Extracted CORS config
 
 // API Layer Specific Services
 builder.Services.AddScoped<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddScoped<ICurrentUserService, DevelopmentCurrentUserService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
+builder.Services.AddProblemDetails(); // RFC 7807 Support
 
-// Add Katmanlar (Layers)
+// Add Layers
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
@@ -36,14 +38,18 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Use the GlobalExceptionHandler
+// IMPORTANT: CORS must be placed before UseAuthentication and UseAuthorization
+app.UseCors(CorsExtensions.VelyoCorsPolicy);
+
+// Global Exception Handler
 app.UseExceptionHandler();
 
-// Map Endpoints
+// Map Minimal API Endpoints
 app.MapWorkspaceEndpoints();
 app.MapProjectEndpoints();
 app.MapTaskEndpoints();
 
+// --- DEVELOPMENT DATA SEEDING BLOCK ---
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
@@ -51,7 +57,6 @@ if (app.Environment.IsDevelopment())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        // VeritabanÄ±nÄ±n oluÅŸturulduÄŸundan emin ol ve tohumla
         await DatabaseSeeder.SeedDevelopmentDataAsync(context);
     }
     catch (Exception ex)

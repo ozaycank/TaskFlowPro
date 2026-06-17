@@ -6,51 +6,65 @@ namespace Velyo.Api.Middleware;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {
+    private readonly ILogger<GlobalExceptionHandler> _logger;
+
+    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
+    {
+        _logger = logger;
+    }
+
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is ValidationException validationException)
+        _logger.LogError(exception, "Exception occurred: {Message}", exception.Message);
+
+        var problemDetails = CreateProblemDetails(httpContext, exception);
+
+        httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
+        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+
+        return true;
+    }
+
+    private static ProblemDetails CreateProblemDetails(HttpContext httpContext, Exception exception)
+    {
+        return exception switch
         {
-            var validationProblemDetails = new ValidationProblemDetails(validationException.Errors)
+            ValidationException validationException => new ValidationProblemDetails(validationException.Errors)
             {
                 Status = StatusCodes.Status400BadRequest,
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                Title = "Validation error occurred",
-                Detail = "One or more validation errors occurred."
-            };
-
-            httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-            await httpContext.Response.WriteAsJsonAsync(validationProblemDetails, cancellationToken);
-            return true;
-        }
-
-        // For other exceptions (e.g. UnauthorizedAccessException), we can handle them here as well
-        if (exception is UnauthorizedAccessException)
-        {
-            var problemDetails = new ProblemDetails
+                Title = "Validation Failed",
+                Detail = "One or more validation errors occurred.",
+                Instance = httpContext.Request.Path
+            },
+            NotFoundException notFoundException => new ProblemDetails
+            {
+                Status = StatusCodes.Status404NotFound,
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+                Title = "Resource Not Found",
+                Detail = notFoundException.Message,
+                Instance = httpContext.Request.Path
+            },
+            UnauthorizedAccessException unauthorizedException => new ProblemDetails
             {
                 Status = StatusCodes.Status401Unauthorized,
+                Type = "https://tools.ietf.org/html/rfc7235#section-3.1",
                 Title = "Unauthorized",
-                Detail = exception.Message
-            };
-            httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
-            return true;
-        }
-
-        // Fallback for unhandled exceptions (500)
-        var serverErrorDetails = new ProblemDetails
-        {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "Server error",
-            Detail = "An unexpected error occurred."
+                Detail = unauthorizedException.Message,
+                Instance = httpContext.Request.Path
+            },
+            // Default Fallback
+            _ => new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
+                Title = "Internal Server Error",
+                Detail = "An unexpected error occurred while processing your request.",
+                Instance = httpContext.Request.Path
+            }
         };
-
-        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        await httpContext.Response.WriteAsJsonAsync(serverErrorDetails, cancellationToken);
-
-        return true;
     }
 }
