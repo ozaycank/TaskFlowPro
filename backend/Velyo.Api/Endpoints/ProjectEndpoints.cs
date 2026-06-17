@@ -6,7 +6,7 @@ namespace Velyo.Api.Endpoints;
 
 public static class ProjectEndpoints
 {
-    public static void MapProjectEndpoints(this IEndpointRouteBuilder app)
+    public static RouteGroupBuilder MapProjectEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/projects").WithTags("Projects");
 
@@ -28,5 +28,6 @@ public static class ProjectEndpoints
         })
         .WithName("GetProjects")
         .WithOpenApi();
+        return group;
     }
 }

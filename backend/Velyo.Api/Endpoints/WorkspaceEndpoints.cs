@@ -6,7 +6,7 @@ namespace Velyo.Api.Endpoints;
 
 public static class WorkspaceEndpoints
 {
-    public static void MapWorkspaceEndpoints(this IEndpointRouteBuilder app)
+    public static RouteGroupBuilder MapWorkspaceEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/workspaces").WithTags("Workspaces");
 
@@ -27,5 +27,6 @@ public static class WorkspaceEndpoints
         })
         .WithName("GetWorkspaces")
         .WithOpenApi();
+        return group;
     }
 }

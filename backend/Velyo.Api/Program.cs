@@ -1,4 +1,7 @@
-﻿using Velyo.Api.Endpoints;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Velyo.Api.Endpoints;
 using Velyo.Api.Extensions;
 using Velyo.Api.Middleware;
 using Velyo.Api.Services;
@@ -7,28 +10,44 @@ using Velyo.Application.Common.Interfaces.Services;
 using Velyo.Infrastructure;
 using Velyo.Infrastructure.Persistence;
 
+// FIXED: Eksik olan namespace eklendi (IPasswordHasher ve ITokenService için)
+using Velyo.Application.Auth.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Dependency Injection ---
-
-// Core Services
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddVelyoSwagger(); // Extracted Swagger config
-builder.Services.AddVelyoCors(builder.Configuration); // Extracted CORS config
+builder.Services.AddVelyoSwagger();
+builder.Services.AddVelyoCors(builder.Configuration);
 
-// API Layer Specific Services
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!))
+        };
+    });
+builder.Services.AddAuthorization();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, Velyo.Infrastructure.Identity.CurrentUserService>();
+builder.Services.AddScoped<IPasswordHasher, Velyo.Infrastructure.Identity.PasswordHasher>();
+builder.Services.AddScoped<ITokenService, Velyo.Infrastructure.Identity.TokenService>();
+
 builder.Services.AddScoped<IDateTimeProvider, DateTimeProvider>();
-builder.Services.AddScoped<ICurrentUserService, DevelopmentCurrentUserService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails(); // RFC 7807 Support
+builder.Services.AddProblemDetails();
 
-// Add Layers
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
-
-// --- 2. HTTP Request Pipeline ---
 
 if (app.Environment.IsDevelopment())
 {
@@ -37,19 +56,20 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// IMPORTANT: CORS must be placed before UseAuthentication and UseAuthorization
 app.UseCors(CorsExtensions.VelyoCorsPolicy);
 
-// Global Exception Handler
+// Authentication ve Authorization MUST be after Cors and before Endpoints
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseExceptionHandler();
 
-// Map Minimal API Endpoints
-app.MapWorkspaceEndpoints();
-app.MapProjectEndpoints();
-app.MapTaskEndpoints();
+// FIXED: Çifte Endpoint mapping kaldırıldı, sadece RequireAuthorization eklendi
+app.MapAuthEndpoints(); // Auth endpointleri herkese açık olmalı (Login/Register)
+app.MapWorkspaceEndpoints().RequireAuthorization(); // JWT ile korunuyor
+app.MapProjectEndpoints().RequireAuthorization();   // JWT ile korunuyor
+app.MapTaskEndpoints().RequireAuthorization();      // JWT ile korunuyor
 
-// --- DEVELOPMENT DATA SEEDING BLOCK ---
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();

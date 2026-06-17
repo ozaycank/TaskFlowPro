@@ -8,7 +8,7 @@ namespace Velyo.Api.Endpoints;
 
 public static class TaskEndpoints
 {
-    public static void MapTaskEndpoints(this IEndpointRouteBuilder app)
+    public static RouteGroupBuilder MapTaskEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/tasks").WithTags("Tasks");
 
@@ -46,5 +46,6 @@ public static class TaskEndpoints
         })
         .WithName("UpdateTask")
         .WithOpenApi();
+        return group;
     }
 }
