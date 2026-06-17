@@ -56,6 +56,14 @@ public class GlobalExceptionHandler : IExceptionHandler
                 Detail = unauthorizedException.Message,
                 Instance = httpContext.Request.Path
             },
+            ForbiddenAccessException forbiddenException => new ProblemDetails
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+                Title = "Forbidden",
+                Detail = forbiddenException.Message,
+                Instance = httpContext.Request.Path
+            },
             // Default Fallback
             _ => new ProblemDetails
             {

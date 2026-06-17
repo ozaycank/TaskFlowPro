@@ -1,0 +1,55 @@
+using Velyo.Application.Common.Exceptions;
+using Velyo.Application.Common.Interfaces.Repositories;
+using Velyo.Application.Common.Interfaces.Services;
+
+namespace Velyo.Infrastructure.Identity;
+
+public class WorkspaceAuthorizationService : IWorkspaceAuthorizationService
+{
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IWorkspaceMemberRepository _workspaceMemberRepository;
+
+    // Cache authorization checks per HTTP Request to prevent N+1 queries
+    private readonly Dictionary<Guid, bool> _membershipCache = new();
+
+    public WorkspaceAuthorizationService(
+        ICurrentUserService currentUserService,
+        IWorkspaceMemberRepository workspaceMemberRepository)
+    {
+        _currentUserService = currentUserService;
+        _workspaceMemberRepository = workspaceMemberRepository;
+    }
+
+    public async Task<bool> IsMemberAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(_currentUserService.UserId) || !Guid.TryParse(_currentUserService.UserId, out var userId))
+        {
+            return false; // Not authenticated
+        }
+
+        if (_membershipCache.TryGetValue(workspaceId, out var isMember))
+        {
+            return isMember;
+        }
+
+        isMember = await _workspaceMemberRepository.IsUserMemberAsync(workspaceId, userId, cancellationToken);
+        _membershipCache[workspaceId] = isMember;
+
+        return isMember;
+    }
+
+    public Task<bool> HasRoleAsync(Guid workspaceId, int requiredRole, CancellationToken cancellationToken = default)
+    {
+        // Placeholder for future RBAC implementation
+        throw new NotImplementedException("Role-based authorization is planned for a future phase.");
+    }
+
+    public async Task AuthorizeMembershipAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    {
+        var isAuthorized = await IsMemberAsync(workspaceId, cancellationToken);
+        if (!isAuthorized)
+        {
+            throw new ForbiddenAccessException("You do not have permission to access or modify resources in this workspace.");
+        }
+    }
+}

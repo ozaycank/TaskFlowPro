@@ -39,4 +39,9 @@ public class WorkspaceMemberRepository : IWorkspaceMemberRepository
     {
         _context.WorkspaceMembers.Remove(workspaceMember);
     }
+    public async Task<bool> IsUserMemberAsync(Guid workspaceId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.WorkspaceMembers
+            .AnyAsync(wm => wm.WorkspaceId == workspaceId && wm.UserId == userId, cancellationToken);
+    }
 }

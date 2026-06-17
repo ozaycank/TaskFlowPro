@@ -39,7 +39,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, Velyo.Infrastructure.Identity.CurrentUserService>();
 builder.Services.AddScoped<IPasswordHasher, Velyo.Infrastructure.Identity.PasswordHasher>();
 builder.Services.AddScoped<ITokenService, Velyo.Infrastructure.Identity.TokenService>();
-
+builder.Services.AddScoped<IWorkspaceAuthorizationService, Velyo.Infrastructure.Identity.WorkspaceAuthorizationService>();
 builder.Services.AddScoped<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
