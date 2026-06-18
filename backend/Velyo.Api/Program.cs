@@ -63,7 +63,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapNotificationEndpoints();
 app.UseExceptionHandler();
-
+app.MapVelyoHubs();
 // FIXED: Çifte Endpoint mapping kaldırıldı, sadece RequireAuthorization eklendi
 app.MapAuthEndpoints(); // Auth endpointleri herkese açık olmalı (Login/Register)
 app.MapWorkspaceEndpoints().RequireAuthorization(); // JWT ile korunuyor

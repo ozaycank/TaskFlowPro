@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Velyo.Application.Common.Interfaces.Data;
 using Velyo.Application.Common.Interfaces.Repositories;
+using Velyo.Application.Common.Interfaces.Services;
 using Velyo.Infrastructure.Persistence;
 using Velyo.Infrastructure.Persistence.Interceptors;
 using Velyo.Infrastructure.Persistence.Repositories;
@@ -29,6 +30,8 @@ public static class DependencyInjection
         services.AddScoped<IWorkspaceMemberRepository, WorkspaceMemberRepository>();
         services.AddScoped<IWorkspaceInvitationRepository, WorkspaceInvitationRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddSignalR();
+        services.AddScoped<IRealTimeNotifier, Velyo.Infrastructure.RealTime.SignalRNotifier>();
 
         // Note: ICurrentUserService and IDateTimeProvider are not registered here.
         // ICurrentUserService depends on HttpContext (API Layer).

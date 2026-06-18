@@ -41,7 +41,12 @@ public class WorkspaceMemberRepository : IWorkspaceMemberRepository
     {
         _context.WorkspaceMembers.Remove(member);
     }
-
+    public async Task<IEnumerable<WorkspaceMember>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.WorkspaceMembers
+            .Where(wm => wm.UserId == userId)
+            .ToListAsync(cancellationToken);
+    }
     public void Update(WorkspaceMember workspaceMember)
     {
         _context.WorkspaceMembers.Update(workspaceMember);
