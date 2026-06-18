@@ -34,8 +34,10 @@ public static class WorkspaceEndpoints
         group.MapPost("/{workspaceId:guid}/invitations", async (Guid workspaceId, InviteMemberCommand command, IMediator mediator) =>
         {
             if (workspaceId != command.WorkspaceId) return Results.BadRequest();
-            var token = await mediator.Send(command);
-            return Results.Ok(new { InvitationToken = token });
+            await mediator.Send(command);
+
+            // SAAS SECURITY: Token artık HTTP isteğinde dönmüyor.
+            return Results.Ok(new { Message = "Invitation sent successfully to the provided email address." });
         });
 
         // POST /api/workspaces/invitations/accept

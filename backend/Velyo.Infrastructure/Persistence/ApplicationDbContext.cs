@@ -5,7 +5,7 @@ using Velyo.Domain.Common.Interfaces; // EKSİK OLAN REFERANS EKLENDİ
 using Velyo.Infrastructure.Persistence.Interceptors;
 using System.Reflection;
 using MediatR;
-
+using Newtonsoft.Json;
 namespace Velyo.Infrastructure.Persistence;
 
 public class ApplicationDbContext : DbContext
@@ -31,6 +31,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<TaskItem> TaskItems => Set<TaskItem>();
     public DbSet<WorkspaceInvitation> WorkspaceInvitations => Set<WorkspaceInvitation>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Ignore<DomainEvent>();
@@ -56,13 +57,20 @@ public class ApplicationDbContext : DbContext
 
         entitiesWithEvents.ForEach(e => e.ClearDomainEvents());
 
-        var result = await base.SaveChangesAsync(cancellationToken);
+        // Serialize events to OutboxMessages within the SAME transaction
+        var outboxMessages = domainEvents.Select(domainEvent =>
+            OutboxMessage.Create(
+                type: domainEvent.GetType().AssemblyQualifiedName!,
+                content: JsonConvert.SerializeObject(domainEvent, new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.All
+                })
+            )).ToList();
 
-        foreach (var domainEvent in domainEvents)
-        {
-            await _mediator.Publish(domainEvent, cancellationToken);
-        }
+        OutboxMessages.AddRange(outboxMessages);
 
-        return result;
+        // Single, atomic transaction
+        return await base.SaveChangesAsync(cancellationToken);
     }
+
 }
