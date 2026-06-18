@@ -61,7 +61,7 @@ app.UseCors(CorsExtensions.VelyoCorsPolicy);
 // Authentication ve Authorization MUST be after Cors and before Endpoints
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.MapNotificationEndpoints();
 app.UseExceptionHandler();
 
 // FIXED: Çifte Endpoint mapping kaldırıldı, sadece RequireAuthorization eklendi
