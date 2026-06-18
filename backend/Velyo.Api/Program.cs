@@ -1,24 +1,35 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using Velyo.Api.Configuration;
 using Velyo.Api.Endpoints;
 using Velyo.Api.Extensions;
 using Velyo.Api.Middleware;
 using Velyo.Api.Services;
 using Velyo.Application;
+using Velyo.Application.Auth.Services;
 using Velyo.Application.Common.Interfaces.Services;
 using Velyo.Infrastructure;
 using Velyo.Infrastructure.Persistence;
 
-// FIXED: Eksik olan namespace eklendi (IPasswordHasher ve ITokenService için)
-using Velyo.Application.Auth.Services;
-
 var builder = WebApplication.CreateBuilder(args);
 
+// --- 1. CONFIGURATION & OBSERVABILITY ---
+builder.ConfigureSerilog();
+builder.Services.AddVelyoOpenTelemetry();
+builder.Services.AddVelyoRateLimiting();
+
+// FIXED: AddNpgSql yerine EntityFramework sağlık kontrolü kullanıldı
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>("Database");
+
+// --- 2. CORE API SERVICES ---
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddVelyoSwagger();
 builder.Services.AddVelyoCors(builder.Configuration);
 
+// --- 3. SECURITY ---
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -35,12 +46,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
+// --- 4. DEPENDENCY INJECTION ---
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, Velyo.Infrastructure.Identity.CurrentUserService>();
 builder.Services.AddScoped<IPasswordHasher, Velyo.Infrastructure.Identity.PasswordHasher>();
 builder.Services.AddScoped<ITokenService, Velyo.Infrastructure.Identity.TokenService>();
 builder.Services.AddScoped<IWorkspaceAuthorizationService, Velyo.Infrastructure.Identity.WorkspaceAuthorizationService>();
 builder.Services.AddScoped<IDateTimeProvider, DateTimeProvider>();
+
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
@@ -49,27 +62,37 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
 
+// --- 5. HTTP REQUEST PIPELINE (Strict Ordering) ---
+app.UseExceptionHandler(); // En üstte olmalı: Tüm middleware hatalarını yakalamak için
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseSerilogRequestLogging(); // İstekleri çok erken loglamak için
 app.UseHttpsRedirection();
 app.UseCors(CorsExtensions.VelyoCorsPolicy);
+app.UseRateLimiter(); // DDoS koruması kimlik doğrulamadan önce çalışmalı
 
-// Authentication ve Authorization MUST be after Cors and before Endpoints
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapNotificationEndpoints();
-app.UseExceptionHandler();
-app.MapVelyoHubs();
-// FIXED: Çifte Endpoint mapping kaldırıldı, sadece RequireAuthorization eklendi
-app.MapAuthEndpoints(); // Auth endpointleri herkese açık olmalı (Login/Register)
-app.MapWorkspaceEndpoints().RequireAuthorization(); // JWT ile korunuyor
-app.MapProjectEndpoints().RequireAuthorization();   // JWT ile korunuyor
-app.MapTaskEndpoints().RequireAuthorization();      // JWT ile korunuyor
 
+// Custom Middleware MUST be after Auth to access user claims
+app.UseMiddleware<RequestLogContextMiddleware>();
+
+// --- 6. ENDPOINT MAPPING ---
+app.MapHealthChecks("/health").AllowAnonymous();
+app.MapVelyoHubs();
+
+app.MapAuthEndpoints();
+app.MapWorkspaceEndpoints().RequireAuthorization();
+app.MapProjectEndpoints().RequireAuthorization();
+app.MapTaskEndpoints().RequireAuthorization();
+app.MapNotificationEndpoints(); // Note: Bu sınıfın içinde RequireAuthorization() tanımlanmıştı
+
+// --- 7. DATABASE SEEDING ---
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();

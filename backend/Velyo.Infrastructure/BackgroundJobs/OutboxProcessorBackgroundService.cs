@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Velyo.Domain.Common.Models;
 using Velyo.Infrastructure.Persistence;
-
+using Polly;
 namespace Velyo.Infrastructure.BackgroundJobs;
 
 public class OutboxProcessorBackgroundService : BackgroundService
@@ -46,27 +46,40 @@ public class OutboxProcessorBackgroundService : BackgroundService
 
         foreach (var message in messages)
         {
+
+            var policy = Policy
+    .Handle<Exception>()
+    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+        (exception, timeSpan, retryCount, context) =>
+        {
+            _logger.LogWarning(exception, "Error processing outbox message {MessageId}. Retrying ({RetryCount}/3)", message.Id, retryCount);
+        });
+
             try
             {
-                var domainEvent = JsonConvert.DeserializeObject<DomainEvent>(message.Content, new JsonSerializerSettings
+                await policy.ExecuteAsync(async () =>
                 {
-                    TypeNameHandling = TypeNameHandling.All
-                });
+                    var domainEvent = JsonConvert.DeserializeObject<DomainEvent>(message.Content, new JsonSerializerSettings
+                    {
+                        TypeNameHandling = TypeNameHandling.All
+                    });
 
-                if (domainEvent != null)
-                {
-                    await mediator.Publish(domainEvent, cancellationToken);
-                }
+                    if (domainEvent != null)
+                    {
+                        await mediator.Publish(domainEvent, cancellationToken);
+                    }
+                });
 
                 message.MarkAsProcessed();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to process outbox message {MessageId}", message.Id);
+                _logger.LogError(ex, "Failed to process outbox message {MessageId} after retries.", message.Id);
                 message.MarkAsFailed(ex.Message);
             }
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    
     }
 }
