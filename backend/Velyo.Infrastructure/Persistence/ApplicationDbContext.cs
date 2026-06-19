@@ -22,7 +22,7 @@ public class ApplicationDbContext : DbContext
         _auditableEntityInterceptor = auditableEntityInterceptor;
         _mediator = mediator;
     }
-
+    public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Workspace> Workspaces => Set<Workspace>();
