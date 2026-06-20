@@ -9,6 +9,8 @@ using Velyo.Infrastructure.Persistence.Interceptors;
 using Velyo.Infrastructure.Persistence.Repositories;
 using Velyo.Infrastructure.BackgroundJobs;
 using Velyo.Infrastructure.Services;
+using Velyo.Infrastructure.Storage;
+
 namespace Velyo.Infrastructure;
 
 public static class DependencyInjection
@@ -31,11 +33,13 @@ public static class DependencyInjection
         services.AddScoped<IWorkspaceMemberRepository, WorkspaceMemberRepository>();
         services.AddScoped<IWorkspaceInvitationRepository, WorkspaceInvitationRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IAttachmentRepository, AttachmentRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
         services.AddSignalR();
         services.AddScoped<IRealTimeNotifier, Velyo.Infrastructure.RealTime.SignalRNotifier>();
         services.AddHostedService<OutboxProcessorBackgroundService>();
         services.AddTransient<IEmailService, MockEmailService>();
-        services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<IStorageService, MockStorageService>();
         // Note: ICurrentUserService and IDateTimeProvider are not registered here.
         // ICurrentUserService depends on HttpContext (API Layer).
         // IDateTimeProvider can be registered here or in Application Layer, but usually API/Infrastructure shared.
