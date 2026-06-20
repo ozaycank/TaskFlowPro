@@ -4,25 +4,25 @@ using Velyo.Domain.Events;
 
 namespace Velyo.Application.RealTime.EventHandlers;
 
-public class TaskUpdatedSignalRHandler : INotificationHandler<TaskUpdatedEvent>
+public class TaskStateTransitionedSignalRHandler : INotificationHandler<TaskStateTransitionedEvent>
 {
     private readonly IRealTimeNotifier _realTimeNotifier;
 
-    public TaskUpdatedSignalRHandler(IRealTimeNotifier realTimeNotifier)
+    public TaskStateTransitionedSignalRHandler(IRealTimeNotifier realTimeNotifier)
     {
         _realTimeNotifier = realTimeNotifier;
     }
 
-    public async Task Handle(TaskUpdatedEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(TaskStateTransitionedEvent notification, CancellationToken cancellationToken)
     {
         await _realTimeNotifier.SendToWorkspaceAsync(
             notification.Task.WorkspaceId,
-            "TaskUpdated",
+            "TaskMoved",
             new
             {
                 TaskId = notification.Task.Id,
-                NewStateId = notification.Task.StateId,
-                Title = notification.Task.Title
+                NewStateId = notification.NewStateId,
+                NewOrderIndex = notification.Task.OrderIndex
             },
             cancellationToken);
     }

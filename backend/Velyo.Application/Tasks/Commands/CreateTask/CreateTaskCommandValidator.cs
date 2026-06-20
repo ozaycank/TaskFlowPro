@@ -8,7 +8,7 @@ public class CreateTaskCommandValidator : AbstractValidator<CreateTaskCommand>
     {
         RuleFor(v => v.WorkspaceId).NotEmpty();
         RuleFor(v => v.ProjectId).NotEmpty();
-
+        RuleFor(v => v.StateId).NotEmpty();
         RuleFor(v => v.Title)
             .MaximumLength(300)
             .NotEmpty();

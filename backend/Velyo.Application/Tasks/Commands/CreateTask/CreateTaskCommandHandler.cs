@@ -44,6 +44,7 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             request.Title,
             request.Description,
             request.Priority,
+            request.StateId,
             request.OrderIndex);
 
         _taskRepository.Add(task);

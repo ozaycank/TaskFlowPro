@@ -1,5 +1,5 @@
 ﻿using Velyo.Domain.Enums;
-using TaskStatus = Velyo.Domain.Enums.TaskStatus;
+// DİKKAT: using TaskStatus = Velyo.Domain.Enums.TaskStatus; SİLİNMELİ
 
 namespace Velyo.Application.Tasks.Queries.GetTasksByProject;
 
@@ -7,7 +7,7 @@ public record TaskDto(
     Guid Id,
     string Title,
     string? Description,
-    TaskStatus Status,
+    Guid StateId,
     PriorityLevel Priority,
     Guid? AssigneeId,
     float OrderIndex,

@@ -9,4 +9,5 @@ public record CreateTaskCommand(
     string Title,
     string? Description,
     PriorityLevel Priority,
+    Guid StateId,
     float OrderIndex) : IRequest<Guid>;

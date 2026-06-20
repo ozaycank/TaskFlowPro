@@ -34,6 +34,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<Attachment> Attachments => Set<Attachment>();
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
+    public DbSet<Workflow> Workflows => Set<Workflow>();
+    public DbSet<WorkflowState> WorkflowStates => Set<WorkflowState>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Ignore<DomainEvent>();
