@@ -10,8 +10,7 @@ public class TaskItem : AuditableEntity
 {
     public Guid WorkspaceId { get; private set; }
     public Guid ProjectId { get; private set; }
-
-    // FIXED: '= null!;' eklenerek CS8618 derleme hatasÄ± kalÄ±cÄ± olarak Ã§Ã¶zÃ¼ldÃ¼.
+    public Dictionary<string, string> CustomFieldsData { get; private set; } = new();
     public string Title { get; private set; } = null!;
 
     public string? Description { get; private set; }
@@ -55,5 +54,19 @@ public class TaskItem : AuditableEntity
         Title = title;
         Description = description;
         Priority = priority;
+    }
+    // Modifying the domain method to handle dynamic fields safely
+    public void UpdateCustomField(Guid fieldDefinitionId, string value)
+    {
+        CustomFieldsData[fieldDefinitionId.ToString()] = value;
+        // AddDomainEvent(new TaskUpdatedEvent(this, ...)) should be triggered
+    }
+
+    public void RemoveCustomField(Guid fieldDefinitionId)
+    {
+        if (CustomFieldsData.ContainsKey(fieldDefinitionId.ToString()))
+        {
+            CustomFieldsData.Remove(fieldDefinitionId.ToString());
+        }
     }
 }

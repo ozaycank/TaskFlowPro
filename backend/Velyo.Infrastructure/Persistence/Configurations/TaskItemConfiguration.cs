@@ -32,5 +32,9 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .WithMany()
             .HasForeignKey(x => x.WorkspaceId)
             .OnDelete(DeleteBehavior.Cascade);
+        // This explicitly tells EF Core Npgsql to map the Dictionary to a JSONB column
+        builder.Property(x => x.CustomFieldsData)
+               .HasColumnType("jsonb")
+               .IsRequired();
     }
 }

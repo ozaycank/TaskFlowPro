@@ -33,6 +33,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<Attachment> Attachments => Set<Attachment>();
+    public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Ignore<DomainEvent>();
