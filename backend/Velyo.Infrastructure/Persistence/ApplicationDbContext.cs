@@ -36,6 +36,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
     public DbSet<Workflow> Workflows => Set<Workflow>();
     public DbSet<WorkflowState> WorkflowStates => Set<WorkflowState>();
+    public DbSet<Sprint> Sprints => Set<Sprint>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Ignore<DomainEvent>();

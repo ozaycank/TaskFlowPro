@@ -11,12 +11,10 @@ public class TaskItem : AuditableEntity
     public string Title { get; private set; } = null!;
     public string? Description { get; private set; }
     public Guid StateId { get; private set; }
-
+    public Guid? SprintId { get; private set; }
     public PriorityLevel Priority { get; private set; }
     public Guid? AssigneeId { get; private set; }
     public float OrderIndex { get; private set; }
-
-    // Phase 20'den gelen JSONB verisi
     public Dictionary<string, string> CustomFieldsData { get; private set; } = new();
 
     protected TaskItem() { }
@@ -28,9 +26,19 @@ public class TaskItem : AuditableEntity
         ProjectId = projectId;
         Title = title;
         Description = description;
-        StateId = stateId; // Artık Task oluşturulurken bir Başlangıç State'i (Örn: Todo Guid'i) verilmeli
+        StateId = stateId;
         Priority = priority;
         OrderIndex = orderIndex;
+    }
+
+    public void AssignToSprint(Guid? sprintId)
+    {
+        // If sprintId is null, it means moving back to the Backlog
+        var oldSprintId = SprintId;
+        SprintId = sprintId;
+
+        // Trigger Outbox/SignalR event for real-time backlog updates
+        AddDomainEvent(new TaskAssignedToSprintEvent(this, oldSprintId, sprintId));
     }
 
     public static TaskItem Create(Guid workspaceId, Guid projectId, string title, string? description, PriorityLevel priority, Guid stateId, float orderIndex)

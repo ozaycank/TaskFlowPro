@@ -25,6 +25,13 @@ public class TaskItemRepository : ITaskItemRepository
             .OrderBy(t => t.OrderIndex)
             .ToListAsync(cancellationToken);
     }
+    public async Task<IEnumerable<TaskItem>> GetBySprintIdAsync(Guid sprintId, CancellationToken cancellationToken = default)
+    {
+        return await _context.TaskItems
+            .Where(t => t.SprintId == sprintId)
+            .OrderBy(t => t.OrderIndex)
+            .ToListAsync(cancellationToken);
+    }
 
     public void Add(TaskItem taskItem)
     {

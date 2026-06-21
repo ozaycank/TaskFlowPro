@@ -36,5 +36,9 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.Property(x => x.CustomFieldsData)
                .HasColumnType("jsonb")
                .IsRequired();
+        builder.HasOne<Sprint>()
+                .WithMany()
+                .HasForeignKey(x => x.SprintId)
+                .OnDelete(DeleteBehavior.SetNull); // Sprint silinirse tasklar Backlog'a (null) düşer
     }
 }

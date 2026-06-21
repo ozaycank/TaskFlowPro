@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<IStorageService, MockStorageService>();
         services.AddScoped<ICustomFieldDefinitionRepository, CustomFieldDefinitionRepository>();
         services.AddScoped<IWorkflowRepository, WorkflowRepository>();
+        services.AddScoped<ISprintRepository, SprintRepository>();
         // Note: ICurrentUserService and IDateTimeProvider are not registered here.
         // ICurrentUserService depends on HttpContext (API Layer).
         // IDateTimeProvider can be registered here or in Application Layer, but usually API/Infrastructure shared.

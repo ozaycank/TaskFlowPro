@@ -6,6 +6,8 @@ public interface ITaskItemRepository
 {
     Task<TaskItem?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IEnumerable<TaskItem>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<TaskItem>> GetBySprintIdAsync(Guid sprintId, CancellationToken cancellationToken = default);
+
     void Add(TaskItem taskItem);
     void Update(TaskItem taskItem);
     void Delete(TaskItem taskItem);
