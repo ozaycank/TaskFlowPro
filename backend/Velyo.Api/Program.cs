@@ -85,7 +85,7 @@ app.UseMiddleware<RequestLogContextMiddleware>();
 // --- 6. ENDPOINT MAPPING ---
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapVelyoHubs();
-
+app.MapBillingEndpoints();
 app.MapAuthEndpoints();
 app.MapWorkspaceEndpoints().RequireAuthorization();
 app.MapProjectEndpoints().RequireAuthorization();

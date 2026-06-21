@@ -45,6 +45,8 @@ public static class DependencyInjection
         services.AddScoped<ISprintRepository, SprintRepository>();
         services.AddScoped<ISearchProjectionRepository, SearchProjectionRepository>();
         services.AddScoped<Velyo.Application.Common.Interfaces.Services.ISearchService, Velyo.Infrastructure.Search.PostgresFullTextSearchService>();
+        Stripe.StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
+        services.AddScoped<Velyo.Application.Common.Interfaces.Services.IBillingService, Velyo.Infrastructure.Billing.StripeBillingService>();
         // Note: ICurrentUserService and IDateTimeProvider are not registered here.
         // ICurrentUserService depends on HttpContext (API Layer).
         // IDateTimeProvider can be registered here or in Application Layer, but usually API/Infrastructure shared.
