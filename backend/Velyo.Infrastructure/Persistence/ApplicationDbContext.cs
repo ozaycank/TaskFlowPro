@@ -37,6 +37,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Workflow> Workflows => Set<Workflow>();
     public DbSet<WorkflowState> WorkflowStates => Set<WorkflowState>();
     public DbSet<Sprint> Sprints => Set<Sprint>();
+    public DbSet<SearchProjection> SearchProjections => Set<SearchProjection>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Ignore<DomainEvent>();
