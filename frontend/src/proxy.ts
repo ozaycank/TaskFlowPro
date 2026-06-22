@@ -3,7 +3,8 @@ import type { NextRequest } from 'next/server';
 
 const publicRoutes = ['/login', '/register', '/forgot-password'];
 
-export function middleware(request: NextRequest) {
+// FIXED: Changed function name from 'middleware' to 'proxy' to match Next.js 16+ API.
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Skip API routes and static assets

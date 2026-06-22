@@ -1,21 +1,25 @@
 import './globals.css';
 import { AuthProvider } from '@/providers/AuthProvider';
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
+import { QueryProvider } from '@/providers/QueryProvider';
+import { Geist } from 'next/font/google';
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ['latin'] });
 
-
-// Assume QueryClientProvider is also configured here
+export const metadata = {
+  title: 'Velyo - Enterprise Workspace',
+  description: 'Manage your projects, sprints and workflows efficiently.',
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn("dark", "font-sans", geist.variable)}>
-      <body className="antialiased text-zinc-900 bg-white dark:bg-zinc-950 dark:text-zinc-50">
-         {/* QueryClientProvider should wrap AuthProvider in real app */}
-         <AuthProvider>
-           {children}
-         </AuthProvider>
+    <html lang="en" className="dark">
+      <body className={`${geist.className} antialiased text-zinc-900 bg-white dark:bg-zinc-950 dark:text-zinc-50`}>
+         {/* CRITICAL: QueryProvider must be the outermost wrapper for TanStack Query to function */}
+         <QueryProvider>
+           <AuthProvider>
+             {children}
+           </AuthProvider>
+         </QueryProvider>
       </body>
     </html>
   );
