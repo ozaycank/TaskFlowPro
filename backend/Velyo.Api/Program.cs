@@ -91,7 +91,7 @@ app.MapWorkspaceEndpoints().RequireAuthorization();
 app.MapProjectEndpoints().RequireAuthorization();
 app.MapTaskEndpoints().RequireAuthorization();
 app.MapNotificationEndpoints(); // Note: Bu sınıfın içinde RequireAuthorization() tanımlanmıştı
-
+app.MapWorkflowEndpoints().RequireAuthorization();
 // --- 7. DATABASE SEEDING ---
 if (app.Environment.IsDevelopment())
 {

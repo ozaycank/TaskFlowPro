@@ -6,6 +6,7 @@ import { loginSchema, LoginFormData } from '../schemas/auth.schema';
 import { useLoginMutation } from '../hooks/useLoginMutation';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { AxiosError } from 'axios';
 
 export const LoginForm = () => {
   const router = useRouter();
@@ -27,9 +28,10 @@ export const LoginForm = () => {
       onSuccess: () => {
         router.push('/'); // Redirect to dashboard
       },
-      onError: (error) => {
-        // Handle RFC7807 ProblemDetails
-        const problem = error.response?.data;
+      onError: (error: Error) => {
+        // Handle RFC7807 ProblemDetails safely with AxiosError casting
+        const axiosError = error as AxiosError<any>;
+        const problem = axiosError.response?.data;
         setGlobalError(problem?.detail || 'Invalid email or password.');
       },
     });
