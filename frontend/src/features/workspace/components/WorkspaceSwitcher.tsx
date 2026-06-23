@@ -1,72 +1,53 @@
-'use client';
-
-import { useWorkspacesQuery } from '../hooks/useWorkspacesQuery';
+import { useEffect } from 'react';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { ChevronsUpDown, Building2 } from 'lucide-react';
-import { CreateWorkspaceDialog } from './CreateWorkspaceDialog';
-import { useRouter } from 'next/navigation';
+import { useWorkspacesQuery } from '../hooks/useWorkspacesQuery';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useRouter, useParams } from 'next/navigation';
 
 export const WorkspaceSwitcher = () => {
-  const { data: workspaces, isLoading } = useWorkspacesQuery();
-  const { activeWorkspaceId, setActiveWorkspace } = useWorkspaceStore();
-  const router = useRouter();
+    const { data: workspaces, isLoading } = useWorkspacesQuery();
+    const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+    const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace);
+    const router = useRouter();
+    const params = useParams();
 
-  if (isLoading) return <div className="h-10 bg-zinc-100 dark:bg-zinc-900 animate-pulse rounded-md w-full" />;
+    useEffect(() => {
+        // ERROR FIXED: Only update state inside useEffect to prevent "setState during render" error
+        if (!isLoading && workspaces && workspaces.length > 0) {
+            const urlWorkspaceId = params.workspaceId as string;
+            
+            // If URL has an ID, make sure store is synced
+            if (urlWorkspaceId && urlWorkspaceId !== activeWorkspaceId) {
+                setActiveWorkspace(urlWorkspaceId);
+            } 
+            // If no active workspace and no URL ID, select the first one
+            else if (!activeWorkspaceId && !urlWorkspaceId) {
+                setActiveWorkspace(workspaces[0].id);
+                router.push(`/workspaces/${workspaces[0].id}`);
+            }
+        }
+    }, [isLoading, workspaces, activeWorkspaceId, params.workspaceId, setActiveWorkspace, router]);
 
-  const activeWorkspace = workspaces?.find((w) => w.id === activeWorkspaceId) || workspaces?.[0];
+    if (isLoading) return <div className="h-10 w-full bg-zinc-100 dark:bg-zinc-800 animate-pulse rounded-md" />;
+    if (!workspaces || workspaces.length === 0) return null;
 
-  // Fallback if no workspaces exist
-  if (!workspaces || workspaces.length === 0) {
-    return <CreateWorkspaceDialog />;
-  }
+    const handleValueChange = (value: string) => {
+        setActiveWorkspace(value);
+        router.push(`/workspaces/${value}`);
+    };
 
-  // Ensure active workspace is set if not present but workspaces exist
-  if (!activeWorkspaceId && activeWorkspace) {
-    setActiveWorkspace(activeWorkspace.id);
-  }
-
-  const handleSwitch = (id: string) => {
-    setActiveWorkspace(id);
-    router.push(`/workspaces/${id}`); // Route to specific workspace dashboard
-  };
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="w-full justify-between h-12 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800">
-          <div className="flex items-center gap-2 truncate">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">
-              <Building2 size={16} />
-            </div>
-            <span className="truncate font-medium">{activeWorkspace?.name || 'Select Workspace'}</span>
-          </div>
-          <ChevronsUpDown size={16} className="text-zinc-500" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="start">
-        <DropdownMenuLabel>Your Workspaces</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {workspaces.map((ws) => (
-          <DropdownMenuItem 
-            key={ws.id} 
-            onClick={() => handleSwitch(ws.id)}
-            className={`cursor-pointer ${activeWorkspaceId === ws.id ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}
-          >
-            {ws.name}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <CreateWorkspaceDialog />
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+    return (
+        <Select value={activeWorkspaceId || undefined} onValueChange={handleValueChange}>
+            <SelectTrigger className="w-full font-semibold border-0 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:ring-0">
+                <SelectValue placeholder="Select Workspace" />
+            </SelectTrigger>
+            <SelectContent>
+                {workspaces.map((ws) => (
+                    <SelectItem key={ws.id} value={ws.id}>
+                        {ws.name}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    );
 };

@@ -8,9 +8,12 @@ export interface UserDto {
 }
 
 export interface LoginResponseDto {
+    userId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
     accessToken: string;
-    // Refresh token is handled via HttpOnly Cookie, so it's not here.
-    user: UserDto;
+    refreshToken: string;
 }
 
 export interface ProblemDetails {

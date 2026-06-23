@@ -1,4 +1,4 @@
-namespace Velyo.Api.Extensions;
+namespace Velyo.Api.Extensions; // Dikkat: Namespace Extensions olmalı
 
 public static class CorsExtensions
 {
@@ -6,18 +6,16 @@ public static class CorsExtensions
 
     public static IServiceCollection AddVelyoCors(this IServiceCollection services, IConfiguration configuration)
     {
-        // In a real scenario, allowed origins would be fetched from appsettings.json
-        var allowedOrigins = configuration.GetSection("AllowedOrigins").Get<string[]>()
-                             ?? new[] { "http://localhost:3000", "http://localhost:5173" }; // Defaults for React/Vite
-
         services.AddCors(options =>
         {
             options.AddPolicy(VelyoCorsPolicy, builder =>
             {
-                builder.WithOrigins(allowedOrigins)
+                // Frontend URL'sine açıkça izin ver (127.0.0.1 ve localhost)
+                builder.WithOrigins("http://localhost:3000", "http://127.0.0.1:3000")
                        .AllowAnyMethod()
                        .AllowAnyHeader()
-                       .AllowCredentials(); // Required if you use cookies or auth headers later
+                       .AllowCredentials()
+                       .WithExposedHeaders("Token-Expired");
             });
         });
 

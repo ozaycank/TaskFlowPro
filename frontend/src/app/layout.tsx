@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className={`${geist.className} antialiased text-zinc-900 bg-white dark:bg-zinc-950 dark:text-zinc-50`}>
-         {/* CRITICAL: QueryProvider must be the outermost wrapper for TanStack Query to function */}
+         {/* QueryProvider MUST wrap AuthProvider and everything else */}
          <QueryProvider>
            <AuthProvider>
              {children}

@@ -3,22 +3,28 @@ import { useAuthStore } from '@/features/authentication/stores/useAuthStore';
 import { authApi } from '@/features/authentication/api/auth.api';
 
 export const apiClient = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
-    withCredentials: true, // HttpOnly cookies için ZORUNLU
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5137/api',
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
     },
 });
 
+// FIXED: Simplest and most optimal token injection
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    // Sadece Zustand'ın güncel durumunu kullanırız.
+    // Zustand persist zaten sayfayı yenilediğinizde (hydrate) bu state'i doldurur.
     const token = useAuthStore.getState().accessToken;
-    if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+
+    if (token) {
+        // Axios config.headers undefined olabileceği için güvenli atama yapıyoruz
+        config.headers.set('Authorization', `Bearer ${token}`);
     }
+
     return config;
 });
 
-// Refresh token concurrency control
 let isRefreshing = false;
 let failedQueue: Array<{
     resolve: (value?: unknown) => void;
@@ -41,8 +47,7 @@ apiClient.interceptors.response.use(
     async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-        // Login veya refresh istekleri patlarsa döngüye girme
-        if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh')) {
+        if (!originalRequest || originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh')) {
             return Promise.reject(error);
         }
 
@@ -52,7 +57,7 @@ apiClient.interceptors.response.use(
                     failedQueue.push({ resolve, reject });
                 })
                     .then((token) => {
-                        originalRequest.headers.Authorization = 'Bearer ' + token;
+                        originalRequest.headers.set('Authorization', `Bearer ${token}`);
                         return apiClient(originalRequest);
                     })
                     .catch((err) => {
@@ -64,18 +69,28 @@ apiClient.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                const { accessToken, user } = await authApi.refresh();
-                useAuthStore.getState().setAuth(accessToken, user);
+                const data = await authApi.refresh();
 
-                processQueue(null, accessToken);
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                useAuthStore.getState().setAuth(data.accessToken, {
+                    id: data.userId,
+                    email: data.email,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    isActive: true
+                });
+
+                if (typeof document !== 'undefined') {
+                    document.cookie = `refreshToken=${data.refreshToken}; path=/; max-age=604800; samesite=lax`;
+                }
+
+                processQueue(null, data.accessToken);
+                originalRequest.headers.set('Authorization', `Bearer ${data.accessToken}`);
 
                 return apiClient(originalRequest);
             } catch (err) {
                 processQueue(err, null);
                 useAuthStore.getState().clearAuth();
-                // Force redirect to login on fatal refresh error
-                if (typeof window !== 'undefined') window.location.href = '/login';
+                // Opsiyonel: window.location.href = '/login';
                 return Promise.reject(err);
             } finally {
                 isRefreshing = false;

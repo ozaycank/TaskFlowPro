@@ -1,21 +1,11 @@
 'use client';
 
-import { useAuthStore } from '@/features/authentication/stores/useAuthStore';
 import { WorkspaceSidebar } from '@/features/workspace/components/WorkspaceSidebar';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isInitializing } = useAuthStore();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isInitializing && !isAuthenticated) {
-      router.replace('/login');
-    }
-  }, [isAuthenticated, isInitializing, router]);
-
-  if (!isAuthenticated) return null;
+  /* * Strict route protection is temporarily handled by proxy.ts (cookie check).
+   * Infinite loop fix is active.
+   */
 
   return (
     <div className="h-screen w-full flex bg-white dark:bg-zinc-950 overflow-hidden">
