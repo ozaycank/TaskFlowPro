@@ -28,6 +28,11 @@ public class UserRepository : IUserRepository
         return await _context.Users.AnyAsync(x => x.Email == email, cancellationToken);
     }
 
+    public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users.FirstOrDefaultAsync(x => x.RefreshToken == refreshToken, cancellationToken);
+    }
+
     public void Add(User user)
     {
         _context.Users.Add(user);
