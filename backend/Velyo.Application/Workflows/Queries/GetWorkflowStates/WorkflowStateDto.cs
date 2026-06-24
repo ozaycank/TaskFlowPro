@@ -4,4 +4,4 @@ public record WorkflowStateDto(
     Guid Id,
     string Name,
     string Color,
-    float OrderIndex);
+    int OrderIndex);

@@ -6,19 +6,21 @@ import { useParams } from 'next/navigation';
 import { useWorkflowStatesQuery } from '@/features/workflows/hooks/useWorkflowStatesQuery';
 import { useTasksQuery } from '../../workflows/hooks/useTasksQuery';
 import { useTransitionTaskMutation } from '../../workflows/hooks/useTransitionTaskMutation';
-import { TaskColumn } from '../components/TaskColumn';
+import { useTaskRealtimeUpdates } from '../hooks/useTaskRealtimeUpdates';
+import { TaskColumn } from './TaskColumn';
 import { TaskDto } from '../../workflows/types/task.types';
 
 export const TaskBoard = () => {
     const params = useParams();
     const workspaceId = params.workspaceId as string;
-    const projectId = params.projectId as string; // Adjust based on your actual route param name
+    const projectId = params.projectId as string;
 
     const { data: states, isLoading: statesLoading } = useWorkflowStatesQuery(workspaceId);
     const { data: tasks, isLoading: tasksLoading } = useTasksQuery(projectId);
     const { mutate: transitionTask } = useTransitionTaskMutation(projectId);
 
-    // Strict Mode Hydration Fix for DnD
+    useTaskRealtimeUpdates();
+
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => {
         setIsMounted(true);
@@ -29,13 +31,12 @@ export const TaskBoard = () => {
     }
 
     if (!states || states.length === 0) {
-        return <div className="p-8 text-center text-zinc-500">No workflow states defined for this workspace.</div>;
+        return <div className="p-8 text-center text-zinc-500">No workflow states defined for this workspace. Please re-create the workspace to trigger default workflows.</div>;
     }
 
     const onDragEnd = (result: DropResult) => {
         const { destination, source, draggableId } = result;
 
-        // Dropped outside a column or exactly where it started
         if (!destination) return;
         if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
@@ -44,21 +45,18 @@ export const TaskBoard = () => {
 
         let newOrderIndex = 0;
 
-        // Enterprise LexoRank / Fractional Indexing Logic approximation
         if (targetTasks.length === 0) {
-            newOrderIndex = 1000; // First item in empty column
+            newOrderIndex = 1000;
         } else if (destination.index === 0) {
-            newOrderIndex = targetTasks[0].orderIndex / 2; // Placed at the very top
+            newOrderIndex = targetTasks[0].orderIndex / 2;
         } else if (destination.index >= targetTasks.length) {
-            newOrderIndex = targetTasks[targetTasks.length - 1].orderIndex + 1000; // Placed at the bottom
+            newOrderIndex = targetTasks[targetTasks.length - 1].orderIndex + 1000;
         } else {
-            // Placed between two items
             const prev = targetTasks[destination.index - 1].orderIndex;
             const next = targetTasks[destination.index].orderIndex;
             newOrderIndex = (prev + next) / 2;
         }
 
-        // Fire Optimistic Update to Backend
         transitionTask({
             taskId: draggableId,
             newStateId: targetStateId,
@@ -66,7 +64,6 @@ export const TaskBoard = () => {
         });
     };
 
-    // Sort states so columns appear in correct order
     const sortedStates = [...states].sort((a, b) => a.orderIndex - b.orderIndex);
 
     return (

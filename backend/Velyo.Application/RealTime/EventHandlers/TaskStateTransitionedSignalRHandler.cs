@@ -21,6 +21,7 @@ public class TaskStateTransitionedSignalRHandler : INotificationHandler<TaskStat
             new
             {
                 TaskId = notification.Task.Id,
+                ProjectId = notification.Task.ProjectId,
                 NewStateId = notification.NewStateId,
                 NewOrderIndex = notification.Task.OrderIndex
             },
