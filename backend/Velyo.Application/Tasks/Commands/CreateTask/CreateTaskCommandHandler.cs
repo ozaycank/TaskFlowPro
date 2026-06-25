@@ -45,7 +45,8 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             request.Description,
             request.Priority,
             request.StateId,
-            request.OrderIndex);
+            request.OrderIndex,
+            request.DueDate);
 
         _taskRepository.Add(task);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

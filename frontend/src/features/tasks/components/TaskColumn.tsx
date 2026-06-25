@@ -4,14 +4,16 @@ import { Droppable } from '@hello-pangea/dnd';
 import { WorkflowStateDto } from '@/features/workflows/types/workflow.types';
 import { TaskDto } from '../../workflows/types/task.types';
 import { TaskCard } from './TaskCard';
+import { CreateTaskDialog } from './CreateTaskDialog'; // FIXED: Missing Import
 
 interface TaskColumnProps {
     state: WorkflowStateDto;
     tasks: TaskDto[];
+    workspaceId: string; // FIXED: Added props
+    projectId: string;   // FIXED: Added props
 }
 
-export const TaskColumn = ({ state, tasks }: TaskColumnProps) => {
-    // Sort tasks strictly by orderIndex before rendering
+export const TaskColumn = ({ state, tasks, workspaceId, projectId }: TaskColumnProps) => {
     const sortedTasks = [...tasks].sort((a, b) => a.orderIndex - b.orderIndex);
 
     return (
@@ -36,12 +38,19 @@ export const TaskColumn = ({ state, tasks }: TaskColumnProps) => {
                         }`}
                     >
                         {sortedTasks.map((task, index) => (
-                            <TaskCard key={task.id} task={task} index={index} />
+                            <TaskCard 
+                                key={task.id} 
+                                task={task} 
+                                index={index}
+                                workspaceId={workspaceId} // FIXED: Passed prop
+                                projectId={projectId}     // FIXED: Passed prop
+                            />
                         ))}
                         {provided.placeholder}
                     </div>
                 )}
             </Droppable>
+            <CreateTaskDialog workspaceId={workspaceId} projectId={projectId} defaultStateId={state.id} />
         </div>
     );
 };

@@ -16,10 +16,10 @@ public class TaskItem : AuditableEntity
     public Guid? AssigneeId { get; private set; }
     public float OrderIndex { get; private set; }
     public Dictionary<string, string> CustomFieldsData { get; private set; } = new();
-
+    public DateTimeOffset? DueDate { get; private set; }
     protected TaskItem() { }
 
-    private TaskItem(Guid workspaceId, Guid projectId, string title, string? description, PriorityLevel priority, Guid stateId, float orderIndex)
+    private TaskItem(Guid workspaceId, Guid projectId, string title, string? description, PriorityLevel priority, Guid stateId, float orderIndex, DateTimeOffset? dueDate)
     {
         Id = Guid.NewGuid();
         WorkspaceId = workspaceId;
@@ -29,6 +29,7 @@ public class TaskItem : AuditableEntity
         StateId = stateId;
         Priority = priority;
         OrderIndex = orderIndex;
+        DueDate = dueDate;
     }
 
     public void AssignToSprint(Guid? sprintId)
@@ -41,9 +42,9 @@ public class TaskItem : AuditableEntity
         AddDomainEvent(new TaskAssignedToSprintEvent(this, oldSprintId, sprintId));
     }
 
-    public static TaskItem Create(Guid workspaceId, Guid projectId, string title, string? description, PriorityLevel priority, Guid stateId, float orderIndex)
+    public static TaskItem Create(Guid workspaceId, Guid projectId, string title, string? description, PriorityLevel priority, Guid stateId, float orderIndex, DateTimeOffset? dueDate)
     {
-        return new TaskItem(workspaceId, projectId, title, description, priority, stateId, orderIndex);
+        return new TaskItem(workspaceId, projectId, title, description, priority, stateId, orderIndex, dueDate);
     }
 
     public void AssignTo(Guid? assigneeId)
@@ -60,11 +61,12 @@ public class TaskItem : AuditableEntity
         AddDomainEvent(new TaskStateTransitionedEvent(this, newStateId));
     }
 
-    public void UpdateDetails(string title, string? description, PriorityLevel priority)
+    public void UpdateDetails(string title, string? description, PriorityLevel priority, DateTimeOffset? dueDate)
     {
         Title = title;
         Description = description;
         Priority = priority;
+        DueDate = dueDate;
     }
 
     public void UpdateCustomField(Guid fieldDefinitionId, string value)

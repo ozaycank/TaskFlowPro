@@ -35,7 +35,7 @@ public class UpdateTaskCommandHandler : IRequestHandler<UpdateTaskCommand>
         await _authorizationService.AuthorizeMembershipAsync(task.WorkspaceId, cancellationToken);
 
         // Domain method encapsulated logic
-        task.UpdateDetails(request.Title, request.Description, request.Priority);
+        task.UpdateDetails(request.Title, request.Description, request.Priority, request.DueDate);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }

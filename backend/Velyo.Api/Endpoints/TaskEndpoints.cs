@@ -40,7 +40,16 @@ public static class TaskEndpoints
         })
         .WithName("UpdateTask")
         .WithOpenApi();
-
+        // GET /api/tasks/{taskId}
+        group.MapGet("/{taskId:guid}", async (Guid taskId, IMediator mediator) =>
+        {
+            var query = new Velyo.Application.Tasks.Queries.GetTaskById.GetTaskByIdQuery(taskId);
+            var task = await mediator.Send(query);
+            return Results.Ok(task);
+        })
+        .WithName("GetTaskById")
+        .WithOpenApi();
+        
         // PUT /api/tasks/{taskId}/transition
         group.MapPut("/{taskId:guid}/transition", async (Guid taskId, TransitionTaskStateCommand command, IMediator mediator) =>
         {
