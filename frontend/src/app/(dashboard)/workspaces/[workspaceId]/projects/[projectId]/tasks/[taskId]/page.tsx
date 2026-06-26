@@ -14,6 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useEffect } from 'react';
+import { UploadDropzone } from '@/features/tasks/components/UploadDropzone';
+import { AttachmentList } from '@/features/tasks/components/AttachmentList';
+import { CommentList } from '@/features/tasks/components/CommentList';
+import { CommentEditor } from '@/features/tasks/components/CommentEditor';
 
 export default function TaskDetailsPage() {
     const params = useParams();
@@ -111,6 +115,25 @@ export default function TaskDetailsPage() {
                         </div>
                     )}
                 </form>
+            </div>
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden">
+                <div className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
+                    <h3 className="font-semibold dark:text-white">Attachments</h3>
+                </div>
+                <div className="p-6">
+                    <UploadDropzone taskId={taskId} />
+                    <AttachmentList taskId={taskId} />
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden mb-12">
+                <div className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
+                    <h3 className="font-semibold dark:text-white">Discussion</h3>
+                </div>
+                <div className="p-6 space-y-8">
+                    <CommentList taskId={taskId} />
+                    <CommentEditor taskId={taskId} />
+                </div>
             </div>
         </div>
     );
