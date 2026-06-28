@@ -5,7 +5,7 @@ import { Settings, Users, FolderKanban, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { usePathname } from 'next/navigation';
-
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 export const WorkspaceSidebar = () => {
   const { activeWorkspaceId } = useWorkspaceStore();
   const pathname = usePathname();
@@ -27,6 +27,9 @@ export const WorkspaceSidebar = () => {
     <div className="w-64 border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex flex-col h-full">
       <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
         <WorkspaceSwitcher />
+        <div className="ml-2">
+            <NotificationBell />
+        </div>
       </div>
       <nav className="flex-1 p-4 space-y-1">
         {navLinks.map((link) => {
