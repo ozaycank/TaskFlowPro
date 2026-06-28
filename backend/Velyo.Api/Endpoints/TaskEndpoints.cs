@@ -8,6 +8,7 @@ using Velyo.Application.Comments.Queries.GetCommentsByTask;
 using Velyo.Application.Attachments.Commands.RequestUploadUrl;
 using Velyo.Application.Attachments.Commands.CompleteUpload;
 using Velyo.Application.Attachments.Queries.GetAttachmentsByTask;
+using Velyo.Application.Tasks.Commands.AssignTaskToSprint;
 
 namespace Velyo.Api.Endpoints;
 
@@ -108,6 +109,15 @@ public static class TaskEndpoints
             return Results.Ok(attachments);
         })
         .WithName("GetTaskAttachments")
+        .WithOpenApi();
+
+        group.MapPut("/{taskId:guid}/assign-sprint", async (Guid taskId, AssignTaskToSprintCommand command, IMediator mediator) =>
+        {
+            if (taskId != command.TaskId) return Results.BadRequest("Task ID mismatch.");
+            await mediator.Send(command);
+            return Results.NoContent();
+        })
+        .WithName("AssignTaskToSprint")
         .WithOpenApi();
 
         return group;
