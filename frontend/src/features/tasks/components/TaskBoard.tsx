@@ -73,7 +73,9 @@ export const TaskBoard = () => {
                     <TaskColumn 
                         key={state.id} 
                         state={state} 
-                        tasks={tasks?.filter((t) => t.stateId === state.id) || []} 
+                        tasks={tasks?.filter((t) => t.stateId === state.id) || []}
+                        workspaceId={workspaceId}
+                        projectId={projectId}
                     />
                 ))}
             </div>

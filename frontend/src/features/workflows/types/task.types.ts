@@ -15,6 +15,7 @@ export interface TaskDto {
     assigneeId: string | null;
     orderIndex: number;
     createdAt: string;
+    sprintId: string | null; // null means it's in the backlog
 }
 
 export interface CreateTaskCommand {

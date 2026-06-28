@@ -1,14 +1,16 @@
 'use client';
 
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
-import { Settings, Users, FolderKanban, Activity } from 'lucide-react';
+import { Settings, Users, FolderKanban, Activity, ListTodo } from 'lucide-react';
 import Link from 'next/link';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { usePathname } from 'next/navigation';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
+import { useProjectStore } from '@/features/projects/stores/useProjectStore';
 export const WorkspaceSidebar = () => {
   const { activeWorkspaceId } = useWorkspaceStore();
   const pathname = usePathname();
+  const { activeProjectId } = useProjectStore();
 
   const getNavLinks = () => {
     if (!activeWorkspaceId) return [];
@@ -18,6 +20,9 @@ export const WorkspaceSidebar = () => {
       { name: 'Projects', href: `${base}/projects`, icon: FolderKanban },
       { name: 'Members', href: `${base}/members`, icon: Users },
       { name: 'Settings', href: `${base}/settings`, icon: Settings },
+      { name: 'Dashboard', href: base, icon: Activity },
+      { name: 'Sprints & Backlog', href: `${base}/projects/${activeProjectId}/sprints`, icon: ListTodo }, // NEW (Requires activeProjectId from ProjectStore)
+      { name: 'Kanban Board', href: `${base}/projects`, icon: FolderKanban },
     ];
   };
 
