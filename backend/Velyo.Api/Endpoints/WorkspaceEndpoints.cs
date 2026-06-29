@@ -4,6 +4,9 @@ using Velyo.Application.Workspaces.Queries.GetWorkspaces; // Added query namespa
 using Velyo.Application.Workspaces.Commands.InviteMember;
 using Velyo.Application.Workspaces.Commands.AcceptInvitation;
 using Velyo.Application.Workspaces.Commands.RemoveMember;
+using Velyo.Application.Workspaces.Queries.GetWorkspaceById;
+using Velyo.Application.Workspaces.Commands.UpdateWorkspace;
+using Velyo.Application.Workspaces.Commands.DeleteWorkspace;
 namespace Velyo.Api.Endpoints;
 
 public static class WorkspaceEndpoints
@@ -53,6 +56,33 @@ public static class WorkspaceEndpoints
             await mediator.Send(new RemoveMemberCommand(workspaceId, userId));
             return Results.NoContent();
         });
+        // GET /api/workspaces/{workspaceId}
+        group.MapGet("/{workspaceId:guid}", async (Guid workspaceId, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new GetWorkspaceByIdQuery(workspaceId));
+            return Results.Ok(result);
+        })
+        .WithName("GetWorkspaceById")
+        .WithOpenApi();
+
+        // PUT /api/workspaces/{workspaceId}
+        group.MapPut("/{workspaceId:guid}", async (Guid workspaceId, UpdateWorkspaceCommand command, IMediator mediator) =>
+        {
+            if (workspaceId != command.WorkspaceId) return Results.BadRequest("Workspace ID mismatch");
+            await mediator.Send(command);
+            return Results.NoContent();
+        })
+        .WithName("UpdateWorkspace")
+        .WithOpenApi();
+
+        // DELETE /api/workspaces/{workspaceId}
+        group.MapDelete("/{workspaceId:guid}", async (Guid workspaceId, IMediator mediator) =>
+        {
+            await mediator.Send(new DeleteWorkspaceCommand(workspaceId));
+            return Results.NoContent();
+        })
+        .WithName("DeleteWorkspace")
+        .WithOpenApi();
 
         return group;
     }
