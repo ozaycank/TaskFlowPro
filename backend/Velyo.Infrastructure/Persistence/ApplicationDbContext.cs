@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Velyo.Domain.Entities;
 using Velyo.Domain.Common.Models;
-using Velyo.Domain.Common.Interfaces; // EKSİK OLAN REFERANS EKLENDİ
+using Velyo.Domain.Common.Interfaces;
 using Velyo.Infrastructure.Persistence.Interceptors;
 using System.Reflection;
 using MediatR;
@@ -38,11 +38,13 @@ public class ApplicationDbContext : DbContext
     public DbSet<WorkflowState> WorkflowStates => Set<WorkflowState>();
     public DbSet<Sprint> Sprints => Set<Sprint>();
     public DbSet<SearchProjection> SearchProjections => Set<SearchProjection>();
+    public DbSet<Worklog> Worklogs => Set<Worklog>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Ignore<DomainEvent>();
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         base.OnModelCreating(builder);
+        builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

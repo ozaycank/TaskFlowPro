@@ -49,7 +49,7 @@ public static class DependencyInjection
         services.AddScoped<Velyo.Application.Common.Interfaces.Services.ISearchService, Velyo.Infrastructure.Search.PostgresFullTextSearchService>();
         Stripe.StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
         services.AddScoped<Velyo.Application.Common.Interfaces.Services.IBillingService, Velyo.Infrastructure.Billing.StripeBillingService>();
-
+        services.AddScoped<IWorklogRepository, WorklogRepository>();
         return services;
     }
 }
