@@ -18,6 +18,8 @@ import { UploadDropzone } from '@/features/tasks/components/UploadDropzone';
 import { AttachmentList } from '@/features/tasks/components/AttachmentList';
 import { CommentList } from '@/features/tasks/components/CommentList';
 import { CommentEditor } from '@/features/tasks/components/CommentEditor';
+import { TimeEntryDialog } from '@/features/time-tracking/components/TimeEntryDialog';
+import { WorklogList } from '@/features/time-tracking/components/WorklogList';
 
 export default function TaskDetailsPage() {
     const params = useParams();
@@ -133,6 +135,16 @@ export default function TaskDetailsPage() {
                 <div className="p-6 space-y-8">
                     <CommentList taskId={taskId} />
                     <CommentEditor taskId={taskId} />
+                </div>
+            </div>
+            {/* --- PHASE 31: ENTERPRISE TIME TRACKING --- */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden mb-6">
+                <div className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex justify-between items-center">
+                    <h3 className="font-semibold dark:text-white">Time Tracking</h3>
+                    <TimeEntryDialog taskId={taskId} />
+                </div>
+                <div className="p-6">
+                    <WorklogList taskId={taskId} />
                 </div>
             </div>
         </div>
