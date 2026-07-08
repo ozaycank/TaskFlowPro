@@ -16,6 +16,7 @@ export interface TaskDto {
     orderIndex: number;
     dueDate?: string | null; // Phase 26 addition
     createdAt: string;
+    customFieldsData: Record<string, string>;
 }
 
 // Phase 26 Addition: Detailed DTO for the Task View

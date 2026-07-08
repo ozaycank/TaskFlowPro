@@ -5,6 +5,7 @@ import { useWorkspaceDetailQuery } from '@/features/workspace/hooks/useWorkspace
 import { WorkspaceSettingsForm } from '@/features/workspace/components/WorkspaceSettingsForm';
 import { DeleteWorkspaceZone } from '@/features/workspace/components/DeleteWorkspaceZone';
 import { Skeleton } from '@/components/ui/skeleton';
+import { WorkspaceCustomFieldsSettings } from '@/features/custom-fields/components/WorkspaceCustomFieldsSettings';
 
 export default function WorkspaceSettingsPage() {
     const params = useParams();
@@ -36,6 +37,7 @@ export default function WorkspaceSettingsPage() {
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
                 <h2 className="text-xl font-semibold mb-6 dark:text-zinc-100">General Information</h2>
                 <WorkspaceSettingsForm workspace={workspace} />
+                <WorkspaceCustomFieldsSettings workspaceId={workspaceId} />
             </div>
 
             {/* In a real app, you might want to conditionally render this only if the user is the Owner */}

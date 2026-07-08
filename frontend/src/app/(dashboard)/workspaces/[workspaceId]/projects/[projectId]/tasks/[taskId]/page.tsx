@@ -20,6 +20,7 @@ import { CommentList } from '@/features/tasks/components/CommentList';
 import { CommentEditor } from '@/features/tasks/components/CommentEditor';
 import { TimeEntryDialog } from '@/features/time-tracking/components/TimeEntryDialog';
 import { WorklogList } from '@/features/time-tracking/components/WorklogList';
+import { TaskCustomFieldsSection } from '@/features/custom-fields/components/TaskCustomFieldsSection';
 
 export default function TaskDetailsPage() {
     const params = useParams();
@@ -107,7 +108,14 @@ export default function TaskDetailsPage() {
                             className="w-full min-h-[200px] p-4 border rounded-md dark:bg-zinc-950 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                     </div>
-
+                    {task && task.customFieldsData && (
+                        <TaskCustomFieldsSection 
+                            taskId={taskId} 
+                            workspaceId={workspaceId}
+                            projectId={task.projectId} 
+                            customFieldsData={task.customFieldsData} 
+                        />
+                    )}
                     {isDirty && (
                         <div className="flex justify-end pt-4 border-t dark:border-zinc-800">
                             <Button type="submit" disabled={isPending}>
