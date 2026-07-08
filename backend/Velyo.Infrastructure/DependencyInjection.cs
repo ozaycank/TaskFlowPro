@@ -50,6 +50,7 @@ public static class DependencyInjection
         Stripe.StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
         services.AddScoped<Velyo.Application.Common.Interfaces.Services.IBillingService, Velyo.Infrastructure.Billing.StripeBillingService>();
         services.AddScoped<IWorklogRepository, WorklogRepository>();
+        services.AddScoped<IDocumentRepository, DocumentRepository>();
         return services;
     }
 }

@@ -39,6 +39,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Sprint> Sprints => Set<Sprint>();
     public DbSet<SearchProjection> SearchProjections => Set<SearchProjection>();
     public DbSet<Worklog> Worklogs => Set<Worklog>();
+    public DbSet<Document> Documents => Set<Document>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Ignore<DomainEvent>();
