@@ -12,4 +12,5 @@ public record TaskDetailDto(
     Guid? AssigneeId,
     float OrderIndex,
     DateTimeOffset? DueDate,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    Dictionary<string, string> CustomFieldsData);

@@ -35,7 +35,8 @@ public class GetTaskByIdQueryHandler : IRequestHandler<GetTaskByIdQuery, TaskDet
             task.AssigneeId,
             task.OrderIndex,
             task.DueDate,
-            task.CreatedAt
+            task.CreatedAt,
+            task.CustomFieldsData.ToDictionary(cf => cf.Key, cf => cf.Value)
         );
     }
 }
