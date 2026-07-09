@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation';
 import { WorkspaceHeader } from '@/features/workspace/components/WorkspaceHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ActivityTimeline } from '@/features/activity/components/ActivityTimeline';
 
 export default function WorkspaceDashboardPage() {
   const params = useParams();
@@ -39,6 +40,12 @@ export default function WorkspaceDashboardPage() {
           </CardContent>
         </Card>
       </div>
+      <div className="mt-8">
+    <ActivityTimeline 
+        params={{ workspaceId: workspaceId, limit: 20 }} 
+        title="Workspace Audit Trail" 
+    />
+</div>
     </div>
   );
 }
