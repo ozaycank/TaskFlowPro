@@ -32,9 +32,14 @@ public class WorkspaceCreatedEventHandler : INotificationHandler<WorkspaceCreate
         _logger.LogInformation("Velyo Audit Trail: Workspace {WorkspaceId} created by user {UserId}",
             notification.Workspace.Id, notification.InitiatedByUserId);
 
+        // DÜZELTİLDİ: Yeni ActivityLog parametrelerine uygun hale getirildi.
         var log = ActivityLog.Create(
-            notification.Workspace.Id,
-            notification.InitiatedByUserId,
+            workspaceId: notification.Workspace.Id,
+            projectId: null,
+            taskId: null,
+            userId: notification.InitiatedByUserId,
+            entityType: "Workspace",
+            entityId: notification.Workspace.Id,
             action: "Workspace.Created",
             details: $"Workspace '{notification.Workspace.Name}' was successfully initialized."
         );
