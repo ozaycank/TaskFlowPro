@@ -40,6 +40,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<SearchProjection> SearchProjections => Set<SearchProjection>();
     public DbSet<Worklog> Worklogs => Set<Worklog>();
     public DbSet<Document> Documents => Set<Document>();
+    public DbSet<AutomationRule> AutomationRules => Set<AutomationRule>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Ignore<DomainEvent>();

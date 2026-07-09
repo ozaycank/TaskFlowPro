@@ -97,6 +97,7 @@ app.MapAnalyticsEndpoints();
 app.MapCustomFieldEndpoints().RequireAuthorization();
 app.MapDocumentEndpoints();
 app.MapActivityEndpoints().RequireAuthorization();
+app.MapAutomationEndpoints();
 // --- 7. DATABASE SEEDING ---
 if (app.Environment.IsDevelopment())
 {

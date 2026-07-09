@@ -51,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<Velyo.Application.Common.Interfaces.Services.IBillingService, Velyo.Infrastructure.Billing.StripeBillingService>();
         services.AddScoped<IWorklogRepository, WorklogRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
+        services.AddScoped<IAutomationRuleRepository, AutomationRuleRepository>();
         return services;
     }
 }
