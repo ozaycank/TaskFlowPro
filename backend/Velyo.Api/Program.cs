@@ -12,6 +12,8 @@ using Velyo.Application.Auth.Services;
 using Velyo.Application.Common.Interfaces.Services;
 using Velyo.Infrastructure;
 using Velyo.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Velyo.Infrastructure.Persistence.Seeder;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,20 +101,35 @@ app.MapDocumentEndpoints();
 app.MapActivityEndpoints().RequireAuthorization();
 app.MapAutomationEndpoints();
 // --- 7. DATABASE SEEDING ---
+// if (app.Environment.IsDevelopment())
+// {
+//     using var scope = app.Services.CreateScope();
+//     var services = scope.ServiceProvider;
+//     try
+//     {
+//         var context = services.GetRequiredService<ApplicationDbContext>();
+//         await DatabaseSeeder.SeedDevelopmentDataAsync(context);
+//     }
+//     catch (Exception ex)
+//     {
+//         var logger = services.GetRequiredService<ILogger<Program>>();
+//         logger.LogError(ex, "An error occurred while seeding the database.");
+//     }
+// }
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
-    var services = scope.ServiceProvider;
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
     try
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        await DatabaseSeeder.SeedDevelopmentDataAsync(context);
+        await context.Database.MigrateAsync();
+        await ApplicationDbContextSeeder.SeedSampleDataAsync(context, logger);
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
     }
 }
-
 app.Run();

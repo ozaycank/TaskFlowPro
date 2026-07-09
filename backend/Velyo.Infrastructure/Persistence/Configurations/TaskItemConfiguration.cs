@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Text.Json;
 using Velyo.Domain.Entities;
 
 namespace Velyo.Infrastructure.Persistence.Configurations;
@@ -27,18 +28,22 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .HasForeignKey(x => x.AssigneeId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Explicit link to Workspace for Multi-tenancy filtering
         builder.HasOne<Workspace>()
             .WithMany()
             .HasForeignKey(x => x.WorkspaceId)
             .OnDelete(DeleteBehavior.Cascade);
-        // This explicitly tells EF Core Npgsql to map the Dictionary to a JSONB column
+
+        // FIXED: EF Core'a Dictionary'nin JSON'a nasıl çevrileceğini (Value Converter) manuel olarak söylüyoruz.
         builder.Property(x => x.CustomFieldsData)
+               .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null) ?? new Dictionary<string, string>())
                .HasColumnType("jsonb")
                .IsRequired();
+
         builder.HasOne<Sprint>()
                 .WithMany()
                 .HasForeignKey(x => x.SprintId)
-                .OnDelete(DeleteBehavior.SetNull); // Sprint silinirse tasklar Backlog'a (null) düşer
+                .OnDelete(DeleteBehavior.SetNull);
     }
 }

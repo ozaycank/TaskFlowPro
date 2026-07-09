@@ -61,7 +61,9 @@ public class OutboxProcessorBackgroundService : BackgroundService
                 {
                     var domainEvent = JsonConvert.DeserializeObject<DomainEvent>(message.Content, new JsonSerializerSettings
                     {
-                        TypeNameHandling = TypeNameHandling.All
+                        TypeNameHandling = TypeNameHandling.All,
+                        // YENİ EKLENEN KISIM: Private setter'ları ve boş constructor'ları okuyabilmesi için
+                        ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
                     });
 
                     if (domainEvent != null)
@@ -80,6 +82,6 @@ public class OutboxProcessorBackgroundService : BackgroundService
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-    
+
     }
 }

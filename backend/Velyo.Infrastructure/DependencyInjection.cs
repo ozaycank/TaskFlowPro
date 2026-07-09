@@ -20,11 +20,13 @@ public static class DependencyInjection
     {
         services.AddScoped<AuditableEntityInterceptor>();
 
-        services.AddDbContext<ApplicationDbContext>((sp, options) =>
+        services.AddDbContext<ApplicationDbContext>(options =>
+    // "DefaultConnection" yerine "PostgresConnection" kullanıyoruz
+    options.UseNpgsql(configuration.GetConnectionString("PostgresConnection"),
+        builder =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("PostgresConnection"));
-        });
-
+            builder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
+        }));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
         services.AddScoped<IUserRepository, UserRepository>();

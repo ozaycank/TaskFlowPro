@@ -20,59 +20,49 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         _logger.LogError(exception, "Exception occurred: {Message}", exception.Message);
 
-        var problemDetails = CreateProblemDetails(httpContext, exception);
+        var problemDetails = new ProblemDetails
+        {
+            Instance = httpContext.Request.Path
+        };
 
-        httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
+        if (exception is ValidationException validationException)
+        {
+            problemDetails.Title = "Validation Failed";
+            problemDetails.Status = StatusCodes.Status400BadRequest;
+            problemDetails.Detail = "One or more validation errors occurred.";
+            problemDetails.Extensions.Add("errors", validationException.Errors);
+        }
+        else if (exception is NotFoundException notFoundException)
+        {
+            problemDetails.Title = "Resource Not Found";
+            problemDetails.Status = StatusCodes.Status404NotFound;
+            problemDetails.Detail = notFoundException.Message;
+        }
+        // YENİ EKLENEN KISIM: Authorization hatalarını zarifçe 403 döndür
+        else if (exception is ForbiddenAccessException)
+        {
+            problemDetails.Title = "Forbidden";
+            problemDetails.Status = StatusCodes.Status403Forbidden;
+            problemDetails.Detail = "You do not have permission to access or modify this resource.";
+        }
+        else if (exception is UnauthorizedAccessException)
+        {
+            problemDetails.Title = "Unauthorized";
+            problemDetails.Status = StatusCodes.Status401Unauthorized;
+            problemDetails.Detail = exception.Message; // "Invalid credentials."
+        }
+        else
+        {
+            problemDetails.Title = "Server Error";
+            problemDetails.Status = StatusCodes.Status500InternalServerError;
+            problemDetails.Detail = "An unexpected error occurred.";
+        }
+
+        httpContext.Response.StatusCode = problemDetails.Status.Value;
+        httpContext.Response.ContentType = "application/problem+json";
+
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
         return true;
-    }
-
-    private static ProblemDetails CreateProblemDetails(HttpContext httpContext, Exception exception)
-    {
-        return exception switch
-        {
-            ValidationException validationException => new ValidationProblemDetails(validationException.Errors)
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                Title = "Validation Failed",
-                Detail = "One or more validation errors occurred.",
-                Instance = httpContext.Request.Path
-            },
-            NotFoundException notFoundException => new ProblemDetails
-            {
-                Status = StatusCodes.Status404NotFound,
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-                Title = "Resource Not Found",
-                Detail = notFoundException.Message,
-                Instance = httpContext.Request.Path
-            },
-            UnauthorizedAccessException unauthorizedException => new ProblemDetails
-            {
-                Status = StatusCodes.Status401Unauthorized,
-                Type = "https://tools.ietf.org/html/rfc7235#section-3.1",
-                Title = "Unauthorized",
-                Detail = unauthorizedException.Message,
-                Instance = httpContext.Request.Path
-            },
-            ForbiddenAccessException forbiddenException => new ProblemDetails
-            {
-                Status = StatusCodes.Status403Forbidden,
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3",
-                Title = "Forbidden",
-                Detail = forbiddenException.Message,
-                Instance = httpContext.Request.Path
-            },
-            // Default Fallback
-            _ => new ProblemDetails
-            {
-                Status = StatusCodes.Status500InternalServerError,
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
-                Title = "Internal Server Error",
-                Detail = "An unexpected error occurred while processing your request.",
-                Instance = httpContext.Request.Path
-            }
-        };
     }
 }
