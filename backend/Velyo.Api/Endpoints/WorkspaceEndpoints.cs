@@ -49,6 +49,15 @@ public static class WorkspaceEndpoints
             await mediator.Send(command);
             return Results.Ok(new { Message = "Successfully joined the workspace." });
         });
+        // GET Workspace Members (Frontend'in aradığı endpoint)
+        group.MapGet("/{workspaceId:guid}/members", async (Guid workspaceId, IMediator mediator) =>
+        {
+            // Eğer GetWorkspaceMembersQuery yoksa, Frontend hata vermemesi için boş liste dönelim
+            // (MVP sonrasında CQRS sınıflarını doldururuz)
+            return Results.Ok(new List<object>());
+        })
+        .WithName("GetWorkspaceMembers")
+        .WithOpenApi();
 
         // DELETE /api/workspaces/{workspaceId}/members/{userId}
         group.MapDelete("/{workspaceId:guid}/members/{userId:guid}", async (Guid workspaceId, Guid userId, IMediator mediator) =>
