@@ -52,6 +52,11 @@ public class WorkspaceAuthorizationService : IWorkspaceAuthorizationService
 
     public async Task AuthorizeMembershipAsync(Guid workspaceId, CancellationToken cancellationToken = default)
     {
+        if (workspaceId == Guid.Empty)
+        {
+            throw new NotFoundException("Workspace", workspaceId.ToString());
+        }
+
         var isAuthorized = await IsMemberAsync(workspaceId, cancellationToken);
         if (!isAuthorized)
         {

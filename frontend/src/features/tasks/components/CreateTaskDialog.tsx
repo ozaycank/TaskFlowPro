@@ -42,7 +42,7 @@ export const CreateTaskDialog = ({ workspaceId, projectId, defaultStateId }: Cre
             description: data.description,
             priority: data.priority,
             stateId: data.stateId,
-            dueDate: data.dueDate,
+            dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : null,
             orderIndex: 99999, // Backend or a smarter calculation can refine this
         }, {
             onSuccess: () => {

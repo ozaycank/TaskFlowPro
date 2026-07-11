@@ -7,7 +7,6 @@ using Velyo.Domain.Events;
 
 namespace Velyo.Application.Notifications.EventHandlers;
 
-// Listens to the EXACT SAME event as ActivityLog, but creates a user notification
 public class WorkspaceCreatedNotificationHandler : INotificationHandler<WorkspaceCreatedEvent>
 {
     private readonly INotificationRepository _notificationRepository;
@@ -21,22 +20,24 @@ public class WorkspaceCreatedNotificationHandler : INotificationHandler<Workspac
 
     public async Task Handle(WorkspaceCreatedEvent notification, CancellationToken cancellationToken)
     {
-        // Owner gets a welcome notification
+        // 1. Workspace ID'sinin boş (Empty) olmadığından emin ol (Guvenlik katmanı)
+        if (notification.Workspace.Id == Guid.Empty)
+            return;
+
+        // 2. ActionUrl formatının doğru olduğundan emin ol
+        string actionUrl = $"/workspaces/{notification.Workspace.Id}";
+
         var userNotification = Notification.Create(
             notification.Workspace.Id,
-            notification.InitiatedByUserId, // Target user
+            notification.InitiatedByUserId, // Hedef kullanıcı (Owner)
             NotificationType.System,
             "Workspace Created Successfully",
             $"Welcome to your new workspace: {notification.Workspace.Name}.",
-            $"/workspaces/{notification.Workspace.Id}" // Future React route
+            actionUrl
         );
 
         _notificationRepository.Add(userNotification);
 
-        // No need to call SaveChangesAsync here if the UnitOfWork pipeline 
-        // is designed to group all event executions into the SAME transaction.
-        // If MediatR Publish is called AFTER SaveChanges (as done in Phase 13), 
-        // we MUST call SaveChangesAsync here to persist the notification.
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

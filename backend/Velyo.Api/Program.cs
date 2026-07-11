@@ -14,7 +14,7 @@ using Velyo.Infrastructure;
 using Velyo.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Velyo.Infrastructure.Persistence.Seeder;
-
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
 // --- 1. CONFIGURATION & OBSERVABILITY ---
@@ -22,7 +22,6 @@ builder.ConfigureSerilog();
 builder.Services.AddVelyoOpenTelemetry();
 builder.Services.AddVelyoRateLimiting();
 
-// FIXED: AddNpgSql yerine EntityFramework sağlık kontrolü kullanıldı
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>("Database");
 

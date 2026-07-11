@@ -50,10 +50,8 @@ public static class WorkspaceEndpoints
             return Results.Ok(new { Message = "Successfully joined the workspace." });
         });
         // GET Workspace Members (Frontend'in aradığı endpoint)
-        group.MapGet("/{workspaceId:guid}/members", async (Guid workspaceId, IMediator mediator) =>
+        group.MapGet("/{workspaceId:guid}/members", (Guid workspaceId, IMediator mediator) =>
         {
-            // Eğer GetWorkspaceMembersQuery yoksa, Frontend hata vermemesi için boş liste dönelim
-            // (MVP sonrasında CQRS sınıflarını doldururuz)
             return Results.Ok(new List<object>());
         })
         .WithName("GetWorkspaceMembers")
