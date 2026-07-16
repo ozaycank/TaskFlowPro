@@ -26,7 +26,13 @@ export const taskApi = {
     transitionTask: async (command: TransitionTaskStateCommand): Promise<void> => {
         await apiClient.put(`/tasks/${command.taskId}/transition`, command);
     },
+
     assignToSprint: async (taskId: string, sprintId: string | null): Promise<void> => {
         await apiClient.put(`/tasks/${taskId}/assign-sprint`, { taskId, sprintId });
+    },
+
+    // Phase 1: Addition for deleting a task
+    deleteTask: async (taskId: string): Promise<void> => {
+        await apiClient.delete(`/tasks/${taskId}`);
     }
 };

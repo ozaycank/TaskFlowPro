@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Velyo.Application.Tasks.Commands.CreateTask;
 using Velyo.Application.Tasks.Commands.UpdateTask;
+using Velyo.Application.Tasks.Commands.DeleteTask; // Added namespace
 using Velyo.Application.Tasks.Queries.GetTasksByProject;
 using Velyo.Application.Workflows.Commands.TransitionTaskState;
 using Velyo.Application.Comments.Commands.CreateComment;
@@ -46,6 +47,7 @@ public static class TaskEndpoints
         })
         .WithName("UpdateTask")
         .WithOpenApi();
+
         // GET /api/tasks/{taskId}
         group.MapGet("/{taskId:guid}", async (Guid taskId, IMediator mediator) =>
         {
@@ -65,7 +67,7 @@ public static class TaskEndpoints
         })
         .WithName("TransitionTaskState")
         .WithOpenApi();
-        
+
         group.MapPost("/{taskId:guid}/comments", async (Guid taskId, CreateCommentCommand command, IMediator mediator) =>
         {
             if (taskId != command.TaskId) return Results.BadRequest("Task ID mismatch.");
@@ -118,6 +120,15 @@ public static class TaskEndpoints
             return Results.NoContent();
         })
         .WithName("AssignTaskToSprint")
+        .WithOpenApi();
+
+
+        group.MapDelete("/{taskId:guid}", async (Guid taskId, IMediator mediator) =>
+        {
+            await mediator.Send(new DeleteTaskCommand(taskId));
+            return Results.NoContent();
+        })
+        .WithName("DeleteTask")
         .WithOpenApi();
 
         return group;

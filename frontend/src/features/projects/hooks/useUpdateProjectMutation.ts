@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { projectService } from '../services/project.service';
+import { projectApi } from '../api/project.api';
 import { PROJECT_QUERY_KEYS } from '../constants/project.constants';
 import { UpdateProjectRequest } from '../types/project.types';
 import { useWorkspaceStore } from '@/features/workspace/stores/useWorkspaceStore';
@@ -9,7 +9,7 @@ export const useUpdateProjectMutation = (projectId: string) => {
     const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
 
     return useMutation({
-        mutationFn: (data: UpdateProjectRequest) => projectService.updateProject(projectId, data),
+        mutationFn: (data: UpdateProjectRequest) => projectApi.updateProject(projectId, data),
         onSuccess: (updatedProject) => {
             queryClient.setQueryData(PROJECT_QUERY_KEYS.detail(projectId), updatedProject);
             if (workspaceId) {
