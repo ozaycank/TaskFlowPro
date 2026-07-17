@@ -28,10 +28,7 @@ export default function WorkspacesIndexPage() {
   // Sadece hiç workspace yoksa bu ekran görünür
   return (
     <div className="max-w-2xl mx-auto mt-20">
-      <WorkspaceEmptyState onAction={() => {
-        // Trigger create modal or navigate to a dedicated create page
-        document.getElementById('dialog-trigger-create-workspace')?.click();
-      }} />
+      <WorkspaceEmptyState />
     </div>
   );
 }

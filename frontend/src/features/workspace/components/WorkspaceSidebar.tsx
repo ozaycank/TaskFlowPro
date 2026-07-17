@@ -1,7 +1,7 @@
 'use client';
 
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
-import { Settings, Users, FolderKanban, Activity, ListTodo, BarChart2 } from 'lucide-react';
+import { Settings, Users, FolderKanban, Activity, ListTodo, BarChart2, Book } from 'lucide-react';
 import Link from 'next/link';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { usePathname, useParams } from 'next/navigation';
@@ -11,8 +11,6 @@ export const WorkspaceSidebar = () => {
   const { activeWorkspaceId } = useWorkspaceStore();
   const pathname = usePathname();
   
-  // FIXED: Zustand yerine URL parametrelerinden güvenli bir şekilde okuyoruz.
-  // Bu sayede "null" stringi hatası kesinlikle önlenmiş olur.
   const params = useParams();
   const projectId = params.projectId as string | undefined;
 
@@ -24,13 +22,15 @@ export const WorkspaceSidebar = () => {
       { name: 'Dashboard', href: base, icon: Activity },
       { name: 'Projects', href: `${base}/projects`, icon: FolderKanban },
       { name: 'Members', href: `${base}/members`, icon: Users },
+      // Workspace-level Documents (Wiki) link
+      { name: 'Documents', href: `${base}/documents`, icon: Book },
     ];
 
-    // Yalnızca kullanıcı bir projenin içindeyse (URL'de projectId varsa) bu sekmeleri göster
     if (projectId) {
       links.push({ name: 'Sprints & Backlog', href: `${base}/projects/${projectId}/sprints`, icon: ListTodo });
       links.push({ name: 'Kanban Board', href: `${base}/projects/${projectId}`, icon: FolderKanban });
       links.push({ name: 'Analytics', href: `${base}/projects/${projectId}/analytics`, icon: BarChart2 });
+      // Note: We can also add project-specific documents here later if needed
     }
 
     links.push({ name: 'Settings', href: `${base}/settings`, icon: Settings });
@@ -52,7 +52,6 @@ export const WorkspaceSidebar = () => {
       <nav className="flex-1 p-4 space-y-1">
         {navLinks.map((link) => {
           const Icon = link.icon;
-          // Alt rotalarda da aktif seçili kalmasını sağlar (örn: /tasks/123 içine girildiğinde)
           const isActive = pathname === link.href || (link.href !== `/workspaces/${activeWorkspaceId}` && pathname.startsWith(link.href));
           
           return (

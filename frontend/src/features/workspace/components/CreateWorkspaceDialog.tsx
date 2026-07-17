@@ -12,7 +12,12 @@ import { useCreateWorkspaceMutation } from '../hooks/useCreateWorkspaceMutation'
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { Plus } from 'lucide-react';
 
-export const CreateWorkspaceDialog = () => {
+// PHASE 4 FIX: Added optional trigger prop for custom trigger buttons
+interface CreateWorkspaceDialogProps {
+  trigger?: React.ReactNode;
+}
+
+export const CreateWorkspaceDialog = ({ trigger }: CreateWorkspaceDialogProps) => {
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useCreateWorkspaceMutation();
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace);
@@ -34,9 +39,13 @@ export const CreateWorkspaceDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full justify-start mt-4">
-          <Plus className="mr-2 h-4 w-4" /> New Workspace
-        </Button>
+        {trigger ? (
+          trigger
+        ) : (
+          <Button variant="outline" className="w-full justify-start mt-4">
+            <Plus className="mr-2 h-4 w-4" /> New Workspace
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
