@@ -14,6 +14,7 @@ using Velyo.Infrastructure;
 using Velyo.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Velyo.Infrastructure.Persistence.Seeder;
+
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,37 +85,27 @@ app.UseAuthorization();
 app.UseMiddleware<RequestLogContextMiddleware>();
 
 // --- 6. ENDPOINT MAPPING ---
+// Public Endpoints
 app.MapHealthChecks("/health").AllowAnonymous();
-app.MapVelyoHubs();
-app.MapBillingEndpoints();
 app.MapAuthEndpoints();
+app.MapBillingEndpoints(); // Webhook'lar içerebileceği için auth kendi içinde yönetilir
+app.MapVelyoHubs();        // SignalR token auth'unu kendi içinde yönetir
+
+// Protected Business Endpoints (Güvenlik ağı olarak hepsine .RequireAuthorization() eklendi)
 app.MapWorkspaceEndpoints().RequireAuthorization();
 app.MapProjectEndpoints().RequireAuthorization();
 app.MapTaskEndpoints().RequireAuthorization();
-app.MapSprintEndpoints();
-app.MapNotificationEndpoints(); // Note: Bu sınıfın içinde RequireAuthorization() tanımlanmıştı
+app.MapSprintEndpoints().RequireAuthorization();
 app.MapWorkflowEndpoints().RequireAuthorization();
-app.MapAnalyticsEndpoints();
 app.MapCustomFieldEndpoints().RequireAuthorization();
-app.MapDocumentEndpoints();
 app.MapActivityEndpoints().RequireAuthorization();
-app.MapAutomationEndpoints();
-// --- 7. DATABASE SEEDING ---
-// if (app.Environment.IsDevelopment())
-// {
-//     using var scope = app.Services.CreateScope();
-//     var services = scope.ServiceProvider;
-//     try
-//     {
-//         var context = services.GetRequiredService<ApplicationDbContext>();
-//         await DatabaseSeeder.SeedDevelopmentDataAsync(context);
-//     }
-//     catch (Exception ex)
-//     {
-//         var logger = services.GetRequiredService<ILogger<Program>>();
-//         logger.LogError(ex, "An error occurred while seeding the database.");
-//     }
-// }
+app.MapSearchEndpoints().RequireAuthorization();
+app.MapDocumentEndpoints().RequireAuthorization();
+app.MapNotificationEndpoints().RequireAuthorization();
+app.MapAutomationEndpoints().RequireAuthorization();
+app.MapAnalyticsEndpoints().RequireAuthorization();
+
+// --- 7. DATABASE MIGRATION & SEEDING ---
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
@@ -131,4 +122,5 @@ if (app.Environment.IsDevelopment())
         logger.LogError(ex, "An error occurred while migrating or seeding the database.");
     }
 }
+
 app.Run();

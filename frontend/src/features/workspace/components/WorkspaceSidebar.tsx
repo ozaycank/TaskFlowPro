@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { usePathname, useParams } from 'next/navigation';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
+import { GlobalSearchModal } from '@/features/search/components/GlobalSearchModal';
 
 export const WorkspaceSidebar = () => {
   const { activeWorkspaceId } = useWorkspaceStore();
@@ -22,7 +23,6 @@ export const WorkspaceSidebar = () => {
       { name: 'Dashboard', href: base, icon: Activity },
       { name: 'Projects', href: `${base}/projects`, icon: FolderKanban },
       { name: 'Members', href: `${base}/members`, icon: Users },
-      // Workspace-level Documents (Wiki) link
       { name: 'Documents', href: `${base}/documents`, icon: Book },
     ];
 
@@ -30,7 +30,6 @@ export const WorkspaceSidebar = () => {
       links.push({ name: 'Sprints & Backlog', href: `${base}/projects/${projectId}/sprints`, icon: ListTodo });
       links.push({ name: 'Kanban Board', href: `${base}/projects/${projectId}`, icon: FolderKanban });
       links.push({ name: 'Analytics', href: `${base}/projects/${projectId}/analytics`, icon: BarChart2 });
-      // Note: We can also add project-specific documents here later if needed
     }
 
     links.push({ name: 'Settings', href: `${base}/settings`, icon: Settings });
@@ -49,7 +48,14 @@ export const WorkspaceSidebar = () => {
           <NotificationBell />
         </div>
       </div>
-      <nav className="flex-1 p-4 space-y-1">
+      
+      {activeWorkspaceId && (
+        <div className="px-4 pt-4 pb-1">
+          <GlobalSearchModal />
+        </div>
+      )}
+
+      <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
         {navLinks.map((link) => {
           const Icon = link.icon;
           const isActive = pathname === link.href || (link.href !== `/workspaces/${activeWorkspaceId}` && pathname.startsWith(link.href));
