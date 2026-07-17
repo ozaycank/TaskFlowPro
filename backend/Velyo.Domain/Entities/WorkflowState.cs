@@ -22,4 +22,12 @@ public class WorkflowState : Entity
         Category = category;
         OrderIndex = orderIndex;
     }
+
+    internal void UpdateDetails(string name, string color, StateCategory category, int orderIndex)
+    {
+        Name = name;
+        Color = color;
+        Category = category;
+        OrderIndex = orderIndex;
+    }
 }

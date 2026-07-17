@@ -32,4 +32,22 @@ public class Workflow : AuditableEntity
         _states.Add(state);
         return state;
     }
+
+    public void UpdateState(Guid stateId, string name, string color, Enums.StateCategory category, int orderIndex)
+    {
+        var state = _states.FirstOrDefault(s => s.Id == stateId);
+        if (state != null)
+        {
+            state.UpdateDetails(name, color, category, orderIndex);
+        }
+    }
+
+    public void RemoveState(Guid stateId)
+    {
+        var state = _states.FirstOrDefault(s => s.Id == stateId);
+        if (state != null)
+        {
+            _states.Remove(state);
+        }
+    }
 }

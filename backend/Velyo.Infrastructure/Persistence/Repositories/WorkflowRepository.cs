@@ -18,6 +18,12 @@ public class WorkflowRepository : IWorkflowRepository
         _context.Set<Workflow>().Add(workflow);
     }
 
+    // PHASE 2 ADDITION: Implement the Update method for modifying states
+    public void Update(Workflow workflow)
+    {
+        _context.Set<Workflow>().Update(workflow);
+    }
+
     public async Task<Workflow?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Set<Workflow>()
