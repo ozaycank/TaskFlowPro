@@ -11,17 +11,20 @@ public class CreateWorkspaceCommandHandler : IRequestHandler<CreateWorkspaceComm
 {
     private readonly IWorkspaceRepository _workspaceRepository;
     private readonly IWorkspaceMemberRepository _workspaceMemberRepository;
+    private readonly IWorkflowRepository _workflowRepository; // FIX: Mimarinize uygun Repository eklendi
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
 
     public CreateWorkspaceCommandHandler(
         IWorkspaceRepository workspaceRepository,
         IWorkspaceMemberRepository workspaceMemberRepository,
+        IWorkflowRepository workflowRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService)
     {
         _workspaceRepository = workspaceRepository;
         _workspaceMemberRepository = workspaceMemberRepository;
+        _workflowRepository = workflowRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
     }
@@ -37,7 +40,18 @@ public class CreateWorkspaceCommandHandler : IRequestHandler<CreateWorkspaceComm
         var workspaceMember = WorkspaceMember.Create(workspace.Id, ownerId, WorkspaceRole.Owner);
 
         _workspaceRepository.Add(workspace);
-        _workspaceMemberRepository.Add(workspaceMember); // Fixed missing persistence
+        _workspaceMemberRepository.Add(workspaceMember);
+
+        // --- FIX: CS1503 hatasını çözmek için 3. parametreye doğru Enum tipini verdik ---
+        var defaultWorkflow = Workflow.Create(workspace.Id, "Default Workflow", isDefault: true);
+
+        // AddState(İsim, Renk/Açıklama, Kategori, Sıra) formatına uygun hale getirildi.
+        defaultWorkflow.AddState("To Do", "#e2e8f0", StateCategory.ToDo, 0);
+        defaultWorkflow.AddState("In Progress", "#bfdbfe", StateCategory.InProgress, 1);
+        defaultWorkflow.AddState("Done", "#bbf7d0", StateCategory.Done, 2);
+
+        _workflowRepository.Add(defaultWorkflow);
+        // ----------------------------------------------------------------------------------
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

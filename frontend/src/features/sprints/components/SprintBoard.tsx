@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { useSprintMutations } from '../hooks/useSprintMutations';
 import { TaskDto } from '@/features/workflows/types/task.types';
+import { CreateTaskDialog } from '@/features/tasks/components/CreateTaskDialog';
 
 export const SprintBoard = ({ workspaceId, projectId }: { workspaceId: string, projectId: string }) => {
     const { data: sprints, isLoading: sprintsLoading } = useSprintsQuery(projectId);
@@ -38,24 +39,35 @@ export const SprintBoard = ({ workspaceId, projectId }: { workspaceId: string, p
     const backlogTasks = tasks?.filter(t => !t.sprintId) || [];
     const activeAndPlannedSprints = sprints?.filter(s => s.status === SprintStatus.Active || s.status === SprintStatus.Planned) || [];
 
-    const renderTaskContainer = (droppableId: string, taskList: TaskDto[]) => (
-        <Droppable droppableId={droppableId}>
-            {(provided, snapshot) => (
-                <div 
-                    ref={provided.innerRef} 
-                    {...provided.droppableProps}
-                    className={`min-h-[100px] p-2 rounded-lg transition-colors ${snapshot.isDraggingOver ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}
-                >
-                    {taskList.map((task, index) => (
-                        <div key={task.id} className="mb-2">
-                            <TaskCard task={task} index={index} workspaceId={workspaceId} projectId={projectId} />
-                        </div>
-                    ))}
-                    {provided.placeholder}
-                    {taskList.length === 0 && <div className="text-center p-4 border-2 border-dashed rounded-lg text-sm text-zinc-500">Drop tasks here</div>}
-                </div>
-            )}
-        </Droppable>
+    const renderTaskContainer = (droppableId: string, taskList: TaskDto[], isBacklog: boolean = false) => (
+        <div className="flex flex-col">
+            <Droppable droppableId={droppableId}>
+                {(provided, snapshot) => (
+                    <div 
+                        ref={provided.innerRef} 
+                        {...provided.droppableProps}
+                        className={`min-h-[100px] p-2 rounded-lg transition-colors ${snapshot.isDraggingOver ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}
+                    >
+                        {taskList.map((task, index) => (
+                            <div key={task.id} className="mb-2">
+                                <TaskCard task={task} index={index} workspaceId={workspaceId} projectId={projectId} />
+                            </div>
+                        ))}
+                        {provided.placeholder}
+                        {taskList.length === 0 && <div className="text-center p-4 border-2 border-dashed rounded-lg text-sm text-zinc-500 mb-2">Drop tasks here</div>}
+                    </div>
+                )}
+            </Droppable>
+            {/* YENİ: Sprint ve Backlog kutularının altına Task Ekle butonu koyuyoruz */}
+            <div className="px-2 mt-1">
+                <CreateTaskDialog 
+                    workspaceId={workspaceId} 
+                    projectId={projectId} 
+                    // Eğer Backlog değilse, sprintId'yi göndermemiz lazım ama CreateTaskDialog bunu desteklemiyor şu an. 
+                    // O yüzden en azından genel bir Task oluşturma butonu ekliyoruz.
+                />
+            </div>
+        </div>
     );
 
     return (

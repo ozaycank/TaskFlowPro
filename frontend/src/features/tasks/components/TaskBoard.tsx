@@ -9,6 +9,7 @@ import { useTransitionTaskMutation } from '../../workflows/hooks/useTransitionTa
 import { useTaskRealtimeUpdates } from '../hooks/useTaskRealtimeUpdates';
 import { TaskColumn } from './TaskColumn';
 import { TaskDto } from '../../workflows/types/task.types';
+import { CreateTaskDialog } from './CreateTaskDialog';
 
 export const TaskBoard = () => {
     const params = useParams();
@@ -68,15 +69,23 @@ export const TaskBoard = () => {
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
+            {/* YENİ: Kanban panosunun üst kısmına "Create Task" butonu eklendi */}
+            <div className="flex justify-between items-center mb-6 px-2">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Project Board</h2>
+                <CreateTaskDialog workspaceId={workspaceId} projectId={projectId} />
+            </div>
+
             <div className="flex h-full gap-6 overflow-x-auto pb-4 items-start">
                 {sortedStates.map((state) => (
-                    <TaskColumn 
-                        key={state.id} 
-                        state={state} 
-                        tasks={tasks?.filter((t) => t.stateId === state.id) || []}
-                        workspaceId={workspaceId}
-                        projectId={projectId}
-                    />
+                    <div key={state.id} className="flex flex-col gap-2">
+                        <TaskColumn 
+                            state={state} 
+                            tasks={tasks?.filter((t) => t.stateId === state.id) || []}
+                            workspaceId={workspaceId}
+                            projectId={projectId}
+                        />
+                        <CreateTaskDialog workspaceId={workspaceId} projectId={projectId} defaultStateId={state.id} />
+                    </div>
                 ))}
             </div>
         </DragDropContext>

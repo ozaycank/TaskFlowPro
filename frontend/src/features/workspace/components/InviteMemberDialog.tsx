@@ -23,7 +23,13 @@ export const InviteMemberDialog = ({ workspaceId }: { workspaceId: string }) => 
   });
 
   const onSubmit = (data: InviteMemberFormData) => {
-    mutate(data, {
+    const payload = {
+        ...data,
+        // FIX: TS2352 hatasını çözmek için 'unknown' üzerinden güvenli dönüştürme (cast) yapıyoruz
+        role: Number(data.role) as unknown as WorkspaceRole
+    };
+
+    mutate(payload as any, {
       onSuccess: () => {
         setOpen(false);
         reset();
@@ -50,14 +56,18 @@ export const InviteMemberDialog = ({ workspaceId }: { workspaceId: string }) => 
           </div>
           <div className="space-y-2">
             <Label>Role</Label>
-            <Select onValueChange={(val) => setValue('role', val as WorkspaceRole)} defaultValue={WorkspaceRole.Member}>
+            {/* FIX: TS2352 hatasını çözmek için 'unknown' eklendi */}
+            <Select 
+                onValueChange={(val) => setValue('role', Number(val) as unknown as WorkspaceRole)} 
+                defaultValue={String(WorkspaceRole.Member)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={WorkspaceRole.Admin}>Admin</SelectItem>
-                <SelectItem value={WorkspaceRole.Member}>Member</SelectItem>
-                <SelectItem value={WorkspaceRole.Guest}>Guest</SelectItem>
+                <SelectItem value={String(WorkspaceRole.Admin)}>Admin</SelectItem>
+                <SelectItem value={String(WorkspaceRole.Member)}>Member</SelectItem>
+                <SelectItem value={String(WorkspaceRole.Guest)}>Guest</SelectItem>
               </SelectContent>
             </Select>
             {errors.role && <span className="text-xs text-red-500">{errors.role.message}</span>}

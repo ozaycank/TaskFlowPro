@@ -3,6 +3,9 @@ namespace Velyo.Domain.Enums;
 // Linear-style state categorization for high-level reporting regardless of custom naming
 public enum StateCategory
 {
+    ToDo = 0,
+    InProgress = 1,
+    Done = 2,
     Backlog = 10,
     Unstarted = 20,
     Started = 30,

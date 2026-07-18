@@ -7,8 +7,9 @@ export const projectApi = {
         return data;
     },
 
-    getProjectById: async (id: string): Promise<ProjectDto> => {
-        const { data } = await apiClient.get<ProjectDto>(`/projects/${id}`);
+    // FIX: 500 BadHttpRequestException hatasını çözmek için workspaceId eklendi
+    getProjectById: async (id: string, workspaceId: string): Promise<ProjectDto> => {
+        const { data } = await apiClient.get<ProjectDto>(`/projects/${id}?workspaceId=${workspaceId}`);
         return data;
     },
 
