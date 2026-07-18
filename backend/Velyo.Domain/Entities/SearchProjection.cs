@@ -32,16 +32,29 @@ public class SearchProjection : Entity
     public static SearchProjection CreateTaskProjection(TaskItem task, string stateName)
     {
         return new SearchProjection(
-            task.WorkspaceId, 
-            task.Id, 
-            "Task", 
-            task.Title, 
-            task.Description ?? "", 
+            task.WorkspaceId,
+            task.Id,
+            "Task",
+            task.Title,
+            task.Description ?? "",
             stateName,
             $"/workspaces/{task.WorkspaceId}/tasks/{task.Id}");
     }
 
-    // Projeksiyon güncellendiğinde çağrılır
+    // PHASE 5 FIX: Added factory method for Documents to be indexed in Global Search
+    public static SearchProjection CreateDocumentProjection(Document document)
+    {
+        return new SearchProjection(
+            document.WorkspaceId,
+            document.Id,
+            "Document",
+            document.Title,
+            document.Content ?? "",
+            document.EmojiIcon, // Using Emoji as Status/Preview for documents
+            $"/workspaces/{document.WorkspaceId}/documents?docId={document.Id}" // Simple routing URL
+        );
+    }
+
     public void UpdateContent(string title, string content, string? statusOrState)
     {
         Title = title;

@@ -11,13 +11,11 @@ public class SearchProjectionConfiguration : IEntityTypeConfiguration<SearchProj
     {
         builder.HasKey(x => x.Id);
 
-        // 1. Explicitly declare the Shadow Property on the entity
+        // Domain'i temiz tutmak için Shadow Property kullanımına geri dönüyoruz.
         builder.Property<NpgsqlTsVector>("SearchVector")
-            // FIXED: Replaced 'concat_ws' (STABLE) with 'COALESCE' and '||' (IMMUTABLE)
-            // PostgreSQL mandates strict immutability for STORED generated columns.
             .HasComputedColumnSql("to_tsvector('english'::regconfig, coalesce(\"Title\", '') || ' ' || coalesce(\"Content\", ''))", stored: true);
 
-        // 2. Apply the GIN index targeting the shadow property
+        // Apply the GIN index targeting the shadow property
         builder.HasIndex("SearchVector")
             .HasMethod("GIN");
 

@@ -9,12 +9,18 @@ namespace Velyo.Application.Documents.Commands.CreateDocument;
 public class CreateDocumentCommandHandler : IRequestHandler<CreateDocumentCommand, Guid>
 {
     private readonly IDocumentRepository _documentRepository;
+    private readonly ISearchProjectionRepository _searchProjectionRepository; // Injected for Search Indexing
     private readonly IWorkspaceAuthorizationService _authService;
     private readonly IUnitOfWork _unitOfWork;
 
-    public CreateDocumentCommandHandler(IDocumentRepository documentRepository, IWorkspaceAuthorizationService authService, IUnitOfWork unitOfWork)
+    public CreateDocumentCommandHandler(
+        IDocumentRepository documentRepository,
+        ISearchProjectionRepository searchProjectionRepository,
+        IWorkspaceAuthorizationService authService,
+        IUnitOfWork unitOfWork)
     {
         _documentRepository = documentRepository;
+        _searchProjectionRepository = searchProjectionRepository;
         _authService = authService;
         _unitOfWork = unitOfWork;
     }
@@ -26,6 +32,10 @@ public class CreateDocumentCommandHandler : IRequestHandler<CreateDocumentComman
         var document = Document.Create(request.WorkspaceId, request.ProjectId, request.ParentDocumentId, request.Title, request.Content, request.EmojiIcon, request.OrderIndex);
 
         _documentRepository.Add(document);
+
+        var searchProjection = SearchProjection.CreateDocumentProjection(document);
+        _searchProjectionRepository.Add(searchProjection);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return document.Id;
