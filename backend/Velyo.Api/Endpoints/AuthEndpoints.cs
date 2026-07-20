@@ -24,9 +24,14 @@ public static class AuthEndpoints
             return Results.Ok(result);
         }).AllowAnonymous();
 
+        group.MapPost("/logout", (HttpContext context) =>
+        {
+            context.Response.Cookies.Delete("refreshToken");
+            return Results.Ok();
+        });
+
         group.MapPost("/refresh", async (HttpContext context, IMediator mediator) =>
         {
-            // The frontend proxy.ts / Axios Interceptor places the refreshToken in a secure cookie
             if (!context.Request.Cookies.TryGetValue("refreshToken", out var refreshToken) || string.IsNullOrEmpty(refreshToken))
             {
                 return Results.Unauthorized();
@@ -40,6 +45,7 @@ public static class AuthEndpoints
             }
             catch (UnauthorizedAccessException)
             {
+                context.Response.Cookies.Delete("refreshToken");
                 return Results.Unauthorized();
             }
         }).AllowAnonymous();

@@ -11,7 +11,6 @@ export const apiClient = axios.create({
     },
 });
 
-// FIXED: Simplest and most optimal token injection
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     // Sadece Zustand'ın güncel durumunu kullanırız.
     // Zustand persist zaten sayfayı yenilediğinizde (hydrate) bu state'i doldurur.
@@ -89,8 +88,12 @@ apiClient.interceptors.response.use(
                 return apiClient(originalRequest);
             } catch (err) {
                 processQueue(err, null);
+
+                if (typeof document !== 'undefined') {
+                    document.cookie = 'refreshToken=; Max-Age=0; path=/;';
+                }
                 useAuthStore.getState().clearAuth();
-                // Opsiyonel: window.location.href = '/login';
+
                 return Promise.reject(err);
             } finally {
                 isRefreshing = false;

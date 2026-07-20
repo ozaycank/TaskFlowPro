@@ -15,12 +15,14 @@ import { format } from 'date-fns';
 import { useSprintMutations } from '../hooks/useSprintMutations';
 import { TaskDto } from '@/features/workflows/types/task.types';
 import { CreateTaskDialog } from '@/features/tasks/components/CreateTaskDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const SprintBoard = ({ workspaceId, projectId }: { workspaceId: string, projectId: string }) => {
     const { data: sprints, isLoading: sprintsLoading } = useSprintsQuery(projectId);
     const { data: tasks, isLoading: tasksLoading } = useTasksQuery(projectId);
     const { mutate: assignTask } = useAssignTaskMutation(projectId);
     const { startMutation, completeMutation } = useSprintMutations(projectId);
+    const queryClient = useQueryClient();
 
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => { setIsMounted(true); }, []);
@@ -29,10 +31,28 @@ export const SprintBoard = ({ workspaceId, projectId }: { workspaceId: string, p
 
     const onDragEnd = (result: DropResult) => {
         const { destination, source, draggableId } = result;
-        if (!destination) return;
-        if (destination.droppableId === source.droppableId) return; // Ignore reordering within same sprint for now
 
+        // 1. Dışarı bırakılırsa hiçbir şey yapma
+        if (!destination) return;
+
+        // 2. Aynı listeye bırakılırsa (şimdilik) hiçbir şey yapma
+        if (destination.droppableId === source.droppableId) return;
+
+        // 3. Hedef Sprint ID'sini belirle (Backlog ise null olacak)
         const targetSprintId = destination.droppableId === 'backlog' ? null : destination.droppableId;
+
+        // --- OPTIMISTIC UPDATE ---
+        // UI'ın anında tepki vermesi ve kartın geri zıplamasını engellemek için cache'i manuel güncelliyoruz.
+        queryClient.setQueryData(['tasks', projectId], (oldData: TaskDto[] | undefined) => {
+            if (!oldData) return [];
+            return oldData.map(task => 
+                task.id === draggableId 
+                    ? { ...task, sprintId: targetSprintId } 
+                    : task
+            );
+        });
+
+        // 4. Arka planda Backend mutasyonunu tetikle
         assignTask({ taskId: draggableId, sprintId: targetSprintId });
     };
 
@@ -40,31 +60,33 @@ export const SprintBoard = ({ workspaceId, projectId }: { workspaceId: string, p
     const activeAndPlannedSprints = sprints?.filter(s => s.status === SprintStatus.Active || s.status === SprintStatus.Planned) || [];
 
     const renderTaskContainer = (droppableId: string, taskList: TaskDto[], isBacklog: boolean = false) => (
-        <div className="flex flex-col">
-            <Droppable droppableId={droppableId}>
+        <div className="flex flex-col h-full">
+            <Droppable droppableId={droppableId} ignoreContainerClipping={true}>
                 {(provided, snapshot) => (
                     <div 
                         ref={provided.innerRef} 
                         {...provided.droppableProps}
-                        className={`min-h-[100px] p-2 rounded-lg transition-colors ${snapshot.isDraggingOver ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}
+                        className={`min-h-[120px] p-2 rounded-lg transition-colors flex-1 ${snapshot.isDraggingOver ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}
                     >
                         {taskList.map((task, index) => (
                             <div key={task.id} className="mb-2">
+                                {/* Draggable wrapper TaskCard içinde tanımlanmış olmalı. Eğer sorun çıkarsa buraya taşıyabiliriz. */}
                                 <TaskCard task={task} index={index} workspaceId={workspaceId} projectId={projectId} />
                             </div>
                         ))}
                         {provided.placeholder}
-                        {taskList.length === 0 && <div className="text-center p-4 border-2 border-dashed rounded-lg text-sm text-zinc-500 mb-2">Drop tasks here</div>}
+                        {taskList.length === 0 && !snapshot.isDraggingOver && (
+                            <div className="text-center p-4 border-2 border-dashed rounded-lg text-sm text-zinc-500 mb-2">
+                                Drop tasks here
+                            </div>
+                        )}
                     </div>
                 )}
             </Droppable>
-            {/* YENİ: Sprint ve Backlog kutularının altına Task Ekle butonu koyuyoruz */}
             <div className="px-2 mt-1">
                 <CreateTaskDialog 
                     workspaceId={workspaceId} 
                     projectId={projectId} 
-                    // Eğer Backlog değilse, sprintId'yi göndermemiz lazım ama CreateTaskDialog bunu desteklemiyor şu an. 
-                    // O yüzden en azından genel bir Task oluşturma butonu ekliyoruz.
                 />
             </div>
         </div>
@@ -72,7 +94,7 @@ export const SprintBoard = ({ workspaceId, projectId }: { workspaceId: string, p
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
-            <div className="flex flex-col gap-8 max-w-4xl mx-auto pb-12">
+            <div className="flex flex-col gap-8 max-w-4xl mx-auto pb-12 overflow-x-hidden">
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-bold">Agile Planning</h2>
                     <CreateSprintDialog projectId={projectId} />
@@ -115,7 +137,7 @@ export const SprintBoard = ({ workspaceId, projectId }: { workspaceId: string, p
                                 )}
                             </div>
                             
-                            <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2 border border-zinc-200/50 dark:border-zinc-800/50">
+                            <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2 border border-zinc-200/50 dark:border-zinc-800/50 min-h-[150px]">
                                 {renderTaskContainer(sprint.id, sprintTasks)}
                             </div>
                         </div>
@@ -133,8 +155,8 @@ export const SprintBoard = ({ workspaceId, projectId }: { workspaceId: string, p
                         </div>
                     </div>
                     
-                    <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2 border border-zinc-200/50 dark:border-zinc-800/50">
-                        {renderTaskContainer('backlog', backlogTasks)}
+                    <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2 border border-zinc-200/50 dark:border-zinc-800/50 min-h-[150px]">
+                        {renderTaskContainer('backlog', backlogTasks, true)}
                     </div>
                 </div>
 

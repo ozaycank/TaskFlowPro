@@ -10,8 +10,8 @@ public class WorkspaceAuthorizationService : IWorkspaceAuthorizationService
     private readonly ICurrentUserService _currentUserService;
     private readonly IWorkspaceMemberRepository _workspaceMemberRepository;
 
-    // Cache authorization checks per HTTP Request to prevent N+1 queries
-    private readonly Dictionary<Guid, bool> _membershipCache = new();
+    // Cache'i userId + workspaceId birleşimiyle daha güvenli hale getiriyoruz
+    private readonly Dictionary<string, bool> _membershipCache = new();
 
     public WorkspaceAuthorizationService(
         ICurrentUserService currentUserService,
@@ -28,13 +28,17 @@ public class WorkspaceAuthorizationService : IWorkspaceAuthorizationService
             return false; // Not authenticated
         }
 
-        if (_membershipCache.TryGetValue(workspaceId, out var isMember))
+        // Cache anahtarını hem User hem Workspace özelinde tutuyoruz (Tenant güvenliği)
+        string cacheKey = $"{userId}_{workspaceId}";
+
+        if (_membershipCache.TryGetValue(cacheKey, out var isMember))
         {
             return isMember;
         }
 
+        // FIX: Veritabanında kontrol et ve sonuca göre cache'le.
         isMember = await _workspaceMemberRepository.IsUserMemberAsync(workspaceId, userId, cancellationToken);
-        _membershipCache[workspaceId] = isMember;
+        _membershipCache[cacheKey] = isMember;
 
         return isMember;
     }
@@ -52,9 +56,11 @@ public class WorkspaceAuthorizationService : IWorkspaceAuthorizationService
 
     public async Task AuthorizeMembershipAsync(Guid workspaceId, CancellationToken cancellationToken = default)
     {
+        // FIX: Activity gibi bazı sayfalarda (örneğin global dashboard) workspaceId null gelebiliyor.
+        // MediatR pipeline'ı (ValidationBehavior) devreye girmeden biz bunu boş bırakıyoruz.
         if (workspaceId == Guid.Empty)
         {
-            throw new NotFoundException("Workspace", workspaceId.ToString());
+            return; // Eğer global bir query ise Workspace yetkisi aramamalıyız.
         }
 
         var isAuthorized = await IsMemberAsync(workspaceId, cancellationToken);

@@ -7,6 +7,7 @@ import { useLoginMutation } from '../hooks/useLoginMutation';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { AxiosError } from 'axios';
+import Link from 'next/link';
 
 export const LoginForm = () => {
   const router = useRouter();
@@ -29,7 +30,6 @@ export const LoginForm = () => {
         router.push('/'); // Redirect to dashboard
       },
       onError: (error: Error) => {
-        // Handle RFC7807 ProblemDetails safely with AxiosError casting
         const axiosError = error as AxiosError<any>;
         const problem = axiosError.response?.data;
         setGlobalError(problem?.detail || 'Invalid email or password.');
@@ -81,6 +81,14 @@ export const LoginForm = () => {
           {loginMutation.isPending ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
+
+      {/* YENİ: Register Sayfasına Yönlendirme Linki */}
+      <div className="text-center text-sm text-zinc-500 dark:text-zinc-400 pt-2">
+        Don't have an account?{' '}
+        <Link href="/register" className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400">
+            Sign up
+        </Link>
+      </div>
     </div>
   );
 };
