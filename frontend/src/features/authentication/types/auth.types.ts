@@ -24,3 +24,10 @@ export interface ProblemDetails {
     instance?: string;
     errors?: Record<string, string[]>;
 }
+
+export interface RegisterRequest {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+}

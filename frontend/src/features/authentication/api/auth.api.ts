@@ -1,8 +1,14 @@
 import { apiClient } from '@/api/client';
-import { LoginResponseDto, UserDto } from '../types/auth.types';
+import { LoginResponseDto, UserDto, RegisterRequest } from '../types/auth.types';
 import { LoginFormData } from '../schemas/auth.schema';
 
 export const authApi = {
+    register: async (request: RegisterRequest) => {
+        // Backend'deki dönüş tipi Login ile aynı (AuthResponseDto)
+        const { data } = await apiClient.post('/auth/register', request);
+        return data;
+    },
+
     login: async (credentials: LoginFormData): Promise<LoginResponseDto> => {
         const { data } = await apiClient.post<LoginResponseDto>('/auth/login', credentials);
         return data;
