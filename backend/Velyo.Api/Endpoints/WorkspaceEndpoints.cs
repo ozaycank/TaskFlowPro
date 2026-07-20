@@ -8,7 +8,7 @@ using Velyo.Application.Workspaces.Commands.RemoveMember;
 using Velyo.Application.Workspaces.Queries.GetWorkspaceById;
 using Velyo.Application.Workspaces.Commands.UpdateWorkspace;
 using Velyo.Application.Workspaces.Commands.DeleteWorkspace;
-
+using Velyo.Application.Workspaces.Queries.GetWorkspaceMembers;
 namespace Velyo.Api.Endpoints;
 
 public static class WorkspaceEndpoints
@@ -65,10 +65,12 @@ public static class WorkspaceEndpoints
         });
 
         // GET Workspace Members
-        group.MapGet("/{workspaceId:guid}/members", (Guid workspaceId, IMediator mediator) =>
+        group.MapGet("/{workspaceId:guid}/members", async (Guid workspaceId, IMediator mediator) =>
         {
-            // Şimdilik boş liste dönüyor, ileride GetWorkspaceMembersQuery bağlanacak
-            return Results.Ok(new List<object>());
+        
+            var query = new GetWorkspaceMembersQuery(workspaceId);
+            var result = await mediator.Send(query);
+            return Results.Ok(result);
         })
         .WithName("GetWorkspaceMembers")
         .WithOpenApi();
