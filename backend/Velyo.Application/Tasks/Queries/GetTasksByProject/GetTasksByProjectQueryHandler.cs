@@ -39,7 +39,9 @@ public class GetTasksByProjectQueryHandler : IRequestHandler<GetTasksByProjectQu
             t.Priority,
             t.AssigneeId,
             t.OrderIndex,
-            t.CreatedAt
+            t.CreatedAt,
+            t.ParentTaskId,
+            t.Labels ?? new List<string>()
         ));
     }
 }

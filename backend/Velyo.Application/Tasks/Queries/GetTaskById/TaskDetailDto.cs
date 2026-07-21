@@ -13,4 +13,7 @@ public record TaskDetailDto(
     float OrderIndex,
     DateTimeOffset? DueDate,
     DateTimeOffset CreatedAt,
-    Dictionary<string, string> CustomFieldsData);
+    Dictionary<string, string> CustomFieldsData,
+    Guid? ParentTaskId,
+    List<string> Labels
+);

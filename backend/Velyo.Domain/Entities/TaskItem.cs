@@ -17,9 +17,12 @@ public class TaskItem : AuditableEntity
     public float OrderIndex { get; private set; }
     public Dictionary<string, string> CustomFieldsData { get; private set; } = new();
     public DateTimeOffset? DueDate { get; private set; }
+    public Guid? ParentTaskId { get; private set; } // Epic veya Ana Görev bağlantısı
+    public List<string> Labels { get; private set; } = new(); // Etiketler (Tags)
+
     protected TaskItem() { }
 
-    private TaskItem(Guid workspaceId, Guid projectId, string title, string? description, PriorityLevel priority, Guid stateId, float orderIndex, DateTimeOffset? dueDate)
+    private TaskItem(Guid workspaceId, Guid projectId, string title, string? description, PriorityLevel priority, Guid stateId, float orderIndex, DateTimeOffset? dueDate, Guid? parentTaskId = null)
     {
         Id = Guid.NewGuid();
         WorkspaceId = workspaceId;
@@ -30,21 +33,19 @@ public class TaskItem : AuditableEntity
         Priority = priority;
         OrderIndex = orderIndex;
         DueDate = dueDate;
+        ParentTaskId = parentTaskId; // YENİ
     }
 
     public void AssignToSprint(Guid? sprintId)
     {
-        // If sprintId is null, it means moving back to the Backlog
         var oldSprintId = SprintId;
         SprintId = sprintId;
-
-        // Trigger Outbox/SignalR event for real-time backlog updates
         AddDomainEvent(new TaskAssignedToSprintEvent(this, oldSprintId, sprintId));
     }
 
-    public static TaskItem Create(Guid workspaceId, Guid projectId, string title, string? description, PriorityLevel priority, Guid stateId, float orderIndex, DateTimeOffset? dueDate)
+    public static TaskItem Create(Guid workspaceId, Guid projectId, string title, string? description, PriorityLevel priority, Guid stateId, float orderIndex, DateTimeOffset? dueDate, Guid? parentTaskId = null)
     {
-        return new TaskItem(workspaceId, projectId, title, description, priority, stateId, orderIndex, dueDate);
+        return new TaskItem(workspaceId, projectId, title, description, priority, stateId, orderIndex, dueDate, parentTaskId);
     }
 
     public void AssignTo(Guid? assigneeId)
@@ -56,8 +57,6 @@ public class TaskItem : AuditableEntity
     {
         StateId = newStateId;
         OrderIndex = newOrderIndex;
-
-        // Fire Domain Event for Real-Time UI updates and Activity Logging
         AddDomainEvent(new TaskStateTransitionedEvent(this, newStateId));
     }
 
@@ -67,6 +66,20 @@ public class TaskItem : AuditableEntity
         Description = description;
         Priority = priority;
         DueDate = dueDate;
+    }
+
+    // --- YENİ: Etiket Yönetimi ---
+    public void AddLabel(string label)
+    {
+        if (!string.IsNullOrWhiteSpace(label) && !Labels.Contains(label))
+        {
+            Labels.Add(label);
+        }
+    }
+
+    public void RemoveLabel(string label)
+    {
+        Labels.Remove(label);
     }
 
     public void UpdateCustomField(Guid fieldDefinitionId, string value)

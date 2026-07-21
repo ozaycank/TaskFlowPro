@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Text.Json;
 using Velyo.Domain.Entities;
-
+using System;
 namespace Velyo.Infrastructure.Persistence.Configurations;
 
 public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
@@ -33,7 +33,6 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .HasForeignKey(x => x.WorkspaceId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // FIXED: EF Core'a Dictionary'nin JSON'a nasıl çevrileceğini (Value Converter) manuel olarak söylüyoruz.
         builder.Property(x => x.CustomFieldsData)
                .HasConversion(
                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
@@ -45,5 +44,16 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
                 .WithMany()
                 .HasForeignKey(x => x.SprintId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+        // Kendi kendine ilişki (Self-Referencing): Bir alt görev (Sub-task), ana göreve (ParentTask) bağlanır.
+        builder.HasOne<TaskItem>()
+            .WithMany()
+            .HasForeignKey(x => x.ParentTaskId)
+            .OnDelete(DeleteBehavior.Restrict); // Ana görev silinirse alt görevleri otomatik silmeyelim, ya da null yapalım (İhtiyaca göre Cascade yapılabilir)
+
+        // Etiketler listesi veritabanına direkt kaydedilir (Postgres için text[])
+        builder.Property(x => x.Labels)
+             .HasColumnType("text[]")
+             .HasDefaultValueSql("'{}'");
     }
 }
