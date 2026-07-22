@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Trash2, Save } from 'lucide-react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
 
 interface DocumentEditorProps {
     workspaceId: string;
@@ -24,29 +27,50 @@ export const DocumentEditor = ({ workspaceId, projectId, documentId, onDocumentD
     const deleteMutation = useDeleteDocumentMutation(workspaceId, projectId);
 
     const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
     const [emoji, setEmoji] = useState('📄');
-    const [error, setError] = useState<string | null>(null); // To show errors gracefully
+    const [error, setError] = useState<string | null>(null);
 
-    // Sync state when document loaded
+    const editor = useEditor({
+        extensions: [
+            StarterKit,
+            Placeholder.configure({
+                placeholder: 'Start writing your documentation here... (Type / for commands)',
+                emptyEditorClass: 'is-editor-empty',
+            }),
+        ],
+        content: '', 
+        editorProps: {
+            attributes: {
+                class: 'prose prose-zinc dark:prose-invert max-w-none focus:outline-none min-h-[500px]',
+            },
+        },
+    });
+
+    // Veri yüklendiğinde editörü ve state'leri güncelle
     useEffect(() => {
         if (document && documentId) {
-            // FIX: Ensure values are never undefined/null to avoid React 'uncontrolled' warning
             setTitle(document.title || '');
-            setContent(document.content || '');
             setEmoji(document.emojiIcon || '📄');
             setError(null);
+            
+            if (editor && document.content !== editor.getHTML()) {
+                editor.commands.setContent(document.content || '');
+            }
         } else if (!documentId) {
             setTitle('');
-            setContent('');
             setEmoji('📄');
             setError(null);
+            if (editor) {
+                editor.commands.setContent('');
+            }
         }
-    }, [document, documentId]);
+    }, [document, documentId, editor]);
 
     const handleSave = async () => {
-        if (!title.trim()) return;
+        if (!title.trim() || !editor) return;
         setError(null);
+
+        const htmlContent = editor.getHTML();
 
         try {
             if (documentId) {
@@ -54,7 +78,7 @@ export const DocumentEditor = ({ workspaceId, projectId, documentId, onDocumentD
                 await updateMutation.mutateAsync({
                     documentId,
                     title,
-                    content,
+                    content: htmlContent,
                     emojiIcon: emoji
                 });
             } else {
@@ -63,9 +87,9 @@ export const DocumentEditor = ({ workspaceId, projectId, documentId, onDocumentD
                     workspaceId,
                     projectId,
                     title,
-                    content,
+                    content: htmlContent, // YENİ: textarea yerine HTML gönderiyoruz
                     emojiIcon: emoji,
-                    orderIndex: 0 // Simplification for MVP
+                    orderIndex: 0
                 });
                 onDocumentCreated(newId);
             }
@@ -102,9 +126,9 @@ export const DocumentEditor = ({ workspaceId, projectId, documentId, onDocumentD
     const isSaving = createMutation.isPending || updateMutation.isPending;
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-white dark:bg-zinc-950 relative">
+        <div className="flex-1 flex flex-col h-full bg-white dark:bg-zinc-950 relative overflow-hidden">
             {/* Toolbar */}
-            <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 z-10">
                 <div className="flex items-center gap-2">
                     <Input 
                         value={emoji} 
@@ -119,7 +143,27 @@ export const DocumentEditor = ({ workspaceId, projectId, documentId, onDocumentD
                         className="text-lg font-semibold border-none shadow-none focus-visible:ring-0 w-96"
                     />
                 </div>
+                
                 <div className="flex items-center gap-2">
+                    {editor && (
+                        <div className="flex items-center gap-1 border-r border-zinc-200 dark:border-zinc-800 pr-4 mr-2">
+                            <Button 
+                                variant="ghost" size="sm" 
+                                onClick={() => editor.chain().focus().toggleBold().run()}
+                                className={editor.isActive('bold') ? 'bg-zinc-200 dark:bg-zinc-800' : ''}
+                            >
+                                <b>B</b>
+                            </Button>
+                            <Button 
+                                variant="ghost" size="sm" 
+                                onClick={() => editor.chain().focus().toggleItalic().run()}
+                                className={editor.isActive('italic') ? 'bg-zinc-200 dark:bg-zinc-800' : ''}
+                            >
+                                <i>I</i>
+                            </Button>
+                        </div>
+                    )}
+
                     {documentId && (
                         <Button variant="destructive" size="icon" onClick={handleDelete} disabled={deleteMutation.isPending}>
                             <Trash2 size={16} />
@@ -134,20 +178,15 @@ export const DocumentEditor = ({ workspaceId, projectId, documentId, onDocumentD
 
             {/* Error Banner */}
             {error && (
-                <div className="bg-red-50 text-red-600 p-3 text-sm border-b border-red-100 flex justify-between items-center">
+                <div className="bg-red-50 text-red-600 p-3 text-sm border-b border-red-100 flex justify-between items-center z-10">
                     <span>{error}</span>
                     <button onClick={() => setError(null)} className="font-bold px-2">&times;</button>
                 </div>
             )}
 
             {/* Editor Area */}
-            <div className="flex-1 p-6">
-                <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Start writing your documentation here... (Markdown supported)"
-                    className="w-full h-full resize-none outline-none bg-transparent text-zinc-800 dark:text-zinc-200 leading-relaxed"
-                />
+            <div className="flex-1 overflow-y-auto p-8 lg:px-24">
+                <EditorContent editor={editor} className="min-h-full" />
             </div>
         </div>
     );
