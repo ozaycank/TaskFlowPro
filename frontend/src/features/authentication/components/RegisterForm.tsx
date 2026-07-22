@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import Image from 'next/image'; // YENİ EKLENDİ
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +23,6 @@ export const RegisterForm = () => {
         setApiError(null);
         mutate(data, {
             onError: (error: any) => {
-                // Backend'den gelen ValidationException hatalarını yakala ("Email is already in use." vb.)
                 const message = error.response?.data?.message || error.response?.data?.title || 'Registration failed. Please try again.';
                 setApiError(message);
             }
@@ -31,7 +31,14 @@ export const RegisterForm = () => {
 
     return (
         <div className="w-full max-w-md space-y-6 bg-white dark:bg-zinc-950 p-8 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800">
-            <div className="space-y-2 text-center">
+            <div className="space-y-2 text-center flex flex-col items-center">
+                <Image 
+                    src="/logo.png" 
+                    alt="Velyo Logo" 
+                    width={48} 
+                    height={48} 
+                    className="mb-4 rounded-xl"
+                />
                 <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Create an account</h1>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                     Enter your details below to create your workspace

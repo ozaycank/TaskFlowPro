@@ -94,6 +94,10 @@ apiClient.interceptors.response.use(
                 }
                 useAuthStore.getState().clearAuth();
 
+                if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+                    window.location.href = `/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`;
+                }
+
                 return Promise.reject(err);
             } finally {
                 isRefreshing = false;

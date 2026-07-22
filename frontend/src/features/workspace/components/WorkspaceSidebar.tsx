@@ -3,6 +3,7 @@
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 import { Settings, Users, FolderKanban, Activity, ListTodo, BarChart2, Book, LayoutDashboard, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image'; 
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { useAuthStore } from '@/features/authentication/stores/useAuthStore';
 import { usePathname, useParams, useRouter } from 'next/navigation';
@@ -13,7 +14,7 @@ import { apiClient } from '@/api/client';
 
 export const WorkspaceSidebar = () => {
   const { activeWorkspaceId } = useWorkspaceStore();
-  const { clearAuth, user } = useAuthStore(); // YENİ: Çıkış yapma ve kullanıcı bilgisi alındı
+  const { clearAuth, user } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -96,6 +97,22 @@ export const WorkspaceSidebar = () => {
 
   return (
     <div className="w-64 border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex flex-col h-full">
+      {/* YENİ: Logo Alanı */}
+      <div className="h-16 flex items-center px-4 border-b border-zinc-200 dark:border-zinc-800">
+        <Link href="/workspaces" className="flex items-center gap-3 transition-opacity hover:opacity-80">
+            <Image 
+                src="/logo.png" 
+                alt="Velyo Logo" 
+                width={28} 
+                height={28} 
+                className="rounded-md"
+            />
+            <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                Velyo
+            </span>
+        </Link>
+      </div>
+
       <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
         <div className="flex-1 min-w-0">
           <WorkspaceSwitcher />

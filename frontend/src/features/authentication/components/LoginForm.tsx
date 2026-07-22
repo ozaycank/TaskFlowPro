@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { AxiosError } from 'axios';
 import Link from 'next/link';
+import Image from 'next/image'; // YENİ EKLENDİ
 
 export const LoginForm = () => {
   const router = useRouter();
@@ -39,7 +40,14 @@ export const LoginForm = () => {
 
   return (
     <div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800">
-      <div className="text-center">
+      <div className="text-center flex flex-col items-center">
+        <Image 
+            src="/logo.png" 
+            alt="Velyo Logo" 
+            width={48} 
+            height={48} 
+            className="mb-4 rounded-xl"
+        />
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Welcome back</h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">Enter your credentials to access your workspace.</p>
       </div>
@@ -82,7 +90,6 @@ export const LoginForm = () => {
         </button>
       </form>
 
-      {/* YENİ: Register Sayfasına Yönlendirme Linki */}
       <div className="text-center text-sm text-zinc-500 dark:text-zinc-400 pt-2">
         Don't have an account?{' '}
         <Link href="/register" className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400">
