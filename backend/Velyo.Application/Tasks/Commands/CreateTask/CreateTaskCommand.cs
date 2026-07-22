@@ -11,5 +11,7 @@ public record CreateTaskCommand(
     PriorityLevel Priority,
     Guid StateId,
     float OrderIndex,
-    DateTimeOffset? DueDate
-    ) : IRequest<Guid>;
+    DateTimeOffset? DueDate,
+    Guid? ParentTaskId,
+    List<string>? Labels
+) : IRequest<Guid>;

@@ -12,29 +12,35 @@ import { createTaskSchema, CreateTaskFormData } from '../schemas/task.schema';
 import { useCreateTaskMutation } from '../hooks/useCreateTaskMutation';
 import { useWorkflowStatesQuery } from '@/features/workflows/hooks/useWorkflowStatesQuery';
 import { PriorityLevel } from '../types/task.types';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 interface CreateTaskDialogProps {
     workspaceId: string;
     projectId: string;
     defaultStateId?: string; // Optional: To create directly in a specific column
+    parentTaskId?: string;   // YENİ: Eğer bir görevin içinden "Add Sub-task" diyorsak burası dolu gelir
 }
 
-export const CreateTaskDialog = ({ workspaceId, projectId, defaultStateId }: CreateTaskDialogProps) => {
+export const CreateTaskDialog = ({ workspaceId, projectId, defaultStateId, parentTaskId }: CreateTaskDialogProps) => {
     const [open, setOpen] = useState(false);
     const { mutate, isPending } = useCreateTaskMutation(projectId);
     const { data: workflowStates } = useWorkflowStatesQuery(workspaceId);
+    
+    const [labelInput, setLabelInput] = useState(''); // YENİ: Etiket State'i
 
-    const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<CreateTaskFormData>({
+    const { register, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm<CreateTaskFormData>({
         resolver: zodResolver(createTaskSchema),
         defaultValues: { 
             priority: PriorityLevel.Medium,
-            stateId: defaultStateId || ''
+            stateId: defaultStateId || '',
+            parentTaskId: parentTaskId || null, // YENİ
+            labels: [] // YENİ
         }
     });
 
+    const currentLabels = watch('labels') || [];
+
     const onSubmit = (data: CreateTaskFormData) => {
-        // Find the order index based on existing tasks (simplified for now: put at the end)
         mutate({
             workspaceId,
             projectId,
@@ -43,25 +49,49 @@ export const CreateTaskDialog = ({ workspaceId, projectId, defaultStateId }: Cre
             priority: data.priority,
             stateId: data.stateId,
             dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : null,
-            orderIndex: 99999, // Backend or a smarter calculation can refine this
+            orderIndex: 99999,
+            parentTaskId: data.parentTaskId, // YENİ
+            labels: data.labels,             // YENİ
         }, {
             onSuccess: () => {
                 setOpen(false);
                 reset();
+                setLabelInput('');
             }
         });
+    };
+
+    // YENİ: Etiket Ekleme ve Çıkarma
+    const handleAddLabel = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = labelInput.trim();
+            if (val && !currentLabels.includes(val)) {
+                setValue('labels', [...currentLabels, val]);
+            }
+            setLabelInput('');
+        }
+    };
+
+    const handleRemoveLabel = (labelToRemove: string) => {
+        setValue('labels', currentLabels.filter(l => l !== labelToRemove));
     };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="sm" variant={defaultStateId ? "ghost" : "default"} className={defaultStateId ? "w-full justify-start text-zinc-500" : ""}>
-                    <Plus className="mr-2 h-4 w-4" /> Create Task
+                <Button 
+                    size="sm" 
+                    variant={defaultStateId ? "ghost" : (parentTaskId ? "outline" : "default")} 
+                    className={defaultStateId ? "w-full justify-start text-zinc-500" : ""}
+                >
+                    <Plus className="mr-2 h-4 w-4" /> 
+                    {parentTaskId ? 'Add Sub-task' : 'Create Task'}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>New Task</DialogTitle>
+                    <DialogTitle>{parentTaskId ? 'New Sub-task' : 'New Task'}</DialogTitle>
                 </DialogHeader>
                 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
@@ -107,19 +137,42 @@ export const CreateTaskDialog = ({ workspaceId, projectId, defaultStateId }: Cre
                                     <SelectItem value={PriorityLevel.Medium.toString()}>Medium</SelectItem>
                                     <SelectItem value={PriorityLevel.High.toString()}>High</SelectItem>
                                     <SelectItem value={PriorityLevel.Urgent.toString()}>Urgent</SelectItem>
+                                    <SelectItem value={PriorityLevel.Critical.toString()}>Critical</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>Due Date</Label>
-                        <Input type="date" {...register('dueDate')} />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Due Date</Label>
+                            <Input type="date" {...register('dueDate')} />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2">
+                        <Label>Labels</Label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {currentLabels.map(label => (
+                                <span key={label} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                    {label}
+                                    <button type="button" onClick={() => handleRemoveLabel(label)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 ml-1 focus:outline-none">
+                                        <X size={14} />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                        <Input 
+                            placeholder="Type a label and press Enter..." 
+                            value={labelInput}
+                            onChange={(e) => setLabelInput(e.target.value)}
+                            onKeyDown={handleAddLabel}
+                        />
                     </div>
 
                     <div className="pt-4 flex justify-end">
                         <Button type="submit" disabled={isPending}>
-                            {isPending ? 'Creating...' : 'Create Task'}
+                            {isPending ? 'Saving...' : (parentTaskId ? 'Create Sub-task' : 'Create Task')}
                         </Button>
                     </div>
                 </form>

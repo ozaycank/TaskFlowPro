@@ -1,7 +1,7 @@
 'use client';
 
 import { Draggable } from '@hello-pangea/dnd';
-import { TaskDto, PriorityLevel } from '../../workflows/types/task.types';
+import { TaskDto, PriorityLevel } from '../../tasks/types/task.types';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
@@ -21,6 +21,20 @@ const getPriorityColor = (priority: PriorityLevel) => {
         case PriorityLevel.Critical: return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
         default: return 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400';
     }
+};
+
+// YENİ: Etiketler için metin tabanlı tutarlı bir renk üretici
+const getLabelColor = (label: string) => {
+    const colors = [
+        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+        'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+        'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
+        'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+        'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+    ];
+    let hash = 0;
+    for (let i = 0; i < label.length; i++) hash = label.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
 };
 
 export const TaskCard = ({ task, index, workspaceId, projectId }: TaskCardProps) => {
@@ -51,9 +65,19 @@ export const TaskCard = ({ task, index, workspaceId, projectId }: TaskCardProps)
                         <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1 leading-tight">
                             {task.title}
                         </h4>
+
+                        {task.labels && task.labels.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2 mb-2">
+                                {task.labels.map(label => (
+                                    <span key={label} className={`text-[10px] px-2 py-0.5 rounded-md font-medium ${getLabelColor(label)}`}>
+                                        {label}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                         
                         {task.description && (
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-3">
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-3 mt-1">
                                 {task.description}
                             </p>
                         )}

@@ -8,5 +8,7 @@ public record UpdateTaskCommand(
     string Title,
     string? Description,
     PriorityLevel Priority,
-    DateTimeOffset? DueDate
-    ) : IRequest;
+    DateTimeOffset? DueDate,
+    Guid? ParentTaskId,
+    List<string>? Labels
+) : IRequest;

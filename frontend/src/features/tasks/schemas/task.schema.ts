@@ -6,8 +6,9 @@ export const createTaskSchema = z.object({
     description: z.string().max(2000).optional(),
     stateId: z.string().min(1, 'Please select a column (state).'),
     priority: z.nativeEnum(PriorityLevel),
-    // dueDate is optional, and if provided, must be a valid ISO string
     dueDate: z.string().optional().nullable(),
+    parentTaskId: z.string().optional().nullable(),
+    labels: z.array(z.string()).optional(),
 });
 
 export const updateTaskSchema = z.object({
@@ -15,6 +16,8 @@ export const updateTaskSchema = z.object({
     description: z.string().max(2000).optional(),
     priority: z.nativeEnum(PriorityLevel),
     dueDate: z.string().optional().nullable(),
+    parentTaskId: z.string().optional().nullable(),
+    labels: z.array(z.string()).optional(),
 });
 
 export type CreateTaskFormData = z.infer<typeof createTaskSchema>;

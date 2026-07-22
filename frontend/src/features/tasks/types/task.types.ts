@@ -14,12 +14,13 @@ export interface TaskDto {
     priority: PriorityLevel;
     assigneeId: string | null;
     orderIndex: number;
-    dueDate?: string | null; // Phase 26 addition
+    dueDate?: string | null;
     createdAt: string;
-    customFieldsData: Record<string, string>;
+    customFieldsData?: Record<string, string> | null;
+    parentTaskId?: string | null;
+    labels: string[];
 }
 
-// Phase 26 Addition: Detailed DTO for the Task View
 export interface TaskDetailDto extends TaskDto {
     projectId: string;
 }
@@ -32,7 +33,9 @@ export interface CreateTaskCommand {
     priority: PriorityLevel;
     stateId: string;
     orderIndex: number;
-    dueDate?: string | null; // Phase 26 addition
+    dueDate?: string | null;
+    parentTaskId?: string | null;
+    labels?: string[];
 }
 
 export interface UpdateTaskCommand {
@@ -40,7 +43,9 @@ export interface UpdateTaskCommand {
     title: string;
     description?: string;
     priority: PriorityLevel;
-    dueDate?: string | null; // Phase 26 addition
+    dueDate?: string | null;
+    parentTaskId?: string | null;
+    labels?: string[];
 }
 
 export interface TransitionTaskStateCommand {

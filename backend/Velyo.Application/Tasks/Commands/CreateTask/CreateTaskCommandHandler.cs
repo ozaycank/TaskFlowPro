@@ -37,7 +37,6 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
         {
             throw new NotFoundException(nameof(Project), request.ProjectId);
         }
-
         var task = TaskItem.Create(
             request.WorkspaceId,
             request.ProjectId,
@@ -46,7 +45,15 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Guid>
             request.Priority,
             request.StateId,
             request.OrderIndex,
-            request.DueDate);
+            request.DueDate,
+            request.ParentTaskId);
+        if (request.Labels != null && request.Labels.Any())
+        {
+            foreach (var label in request.Labels)
+            {
+                task.AddLabel(label);
+            }
+        }
 
         _taskRepository.Add(task);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, X } from 'lucide-react';
 import { UploadDropzone } from '@/features/tasks/components/UploadDropzone';
 import { AttachmentList } from '@/features/tasks/components/AttachmentList';
 import { CommentList } from '@/features/tasks/components/CommentList';
@@ -35,12 +35,14 @@ export default function TaskDetailsPage() {
     const { mutateAsync: deleteTask, isPending: isDeleting } = useDeleteTaskMutation(projectId);
 
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [labelInput, setLabelInput] = useState(''); // YENİ: Etiket Input State'i
 
-    const { register, handleSubmit, setValue, reset, formState: { isDirty } } = useForm<UpdateTaskFormData>({
+    const { register, handleSubmit, setValue, watch, reset, formState: { isDirty } } = useForm<UpdateTaskFormData>({
         resolver: zodResolver(updateTaskSchema)
     });
 
-    // Populate form when task data arrives
+    const currentLabels = watch('labels') || []; // YENİ: Anlık etiketleri izliyoruz
+
     useEffect(() => {
         if (task) {
             reset({
@@ -48,6 +50,8 @@ export default function TaskDetailsPage() {
                 description: task.description || '',
                 priority: task.priority,
                 dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : null,
+                labels: task.labels || [], // YENİ: Backend'den gelen etiketler
+                parentTaskId: task.parentTaskId || null, // YENİ: Alt Görev
             });
         }
     }, [task, reset]);
@@ -59,6 +63,8 @@ export default function TaskDetailsPage() {
             description: data.description,
             priority: data.priority,
             dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : null,
+            labels: data.labels, // YENİ
+            parentTaskId: data.parentTaskId // YENİ
         });
     };
 
@@ -77,6 +83,22 @@ export default function TaskDetailsPage() {
         }
     };
 
+    // YENİ: Etiket Ekleme ve Çıkarma Mantığı
+    const handleAddLabel = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = labelInput.trim();
+            if (val && !currentLabels.includes(val)) {
+                setValue('labels', [...currentLabels, val], { shouldDirty: true });
+            }
+            setLabelInput('');
+        }
+    };
+
+    const handleRemoveLabel = (labelToRemove: string) => {
+        setValue('labels', currentLabels.filter(l => l !== labelToRemove), { shouldDirty: true });
+    };
+
     if (isLoading) return <Skeleton className="w-full h-[500px] rounded-xl" />;
     if (!task) return <div className="p-8 text-center text-zinc-500">Task not found.</div>;
 
@@ -87,7 +109,6 @@ export default function TaskDetailsPage() {
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back to Board
                 </Button>
 
-                {/* PHASE 6: Added Delete Button securely */}
                 <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting}>
                     <Trash2 size={16} className="mr-2" />
                     {isDeleting ? 'Deleting...' : 'Delete Task'}
@@ -132,6 +153,26 @@ export default function TaskDetailsPage() {
                             <Label>Due Date</Label>
                             <Input type="date" {...register('dueDate')} />
                         </div>
+                    </div>
+
+                    <div className="space-y-2 pt-4">
+                        <Label>Labels</Label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {currentLabels.map(label => (
+                                <span key={label} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                    {label}
+                                    <button type="button" onClick={() => handleRemoveLabel(label)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 ml-1 focus:outline-none">
+                                        <X size={14} />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                        <Input 
+                            placeholder="Type a label (e.g. 'bug', 'frontend') and press Enter..." 
+                            value={labelInput}
+                            onChange={(e) => setLabelInput(e.target.value)}
+                            onKeyDown={handleAddLabel}
+                        />
                     </div>
 
                     <div className="space-y-2 pt-4">
@@ -182,7 +223,6 @@ export default function TaskDetailsPage() {
                 </div>
             </div>
 
-            {/* --- PHASE 31: ENTERPRISE TIME TRACKING --- */}
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden mb-6">
                 <div className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex justify-between items-center">
                     <h3 className="font-semibold dark:text-white">Time Tracking</h3>
