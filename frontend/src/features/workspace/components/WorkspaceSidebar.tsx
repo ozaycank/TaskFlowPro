@@ -1,7 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react'; 
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
-import { Settings, Users, FolderKanban, Activity, ListTodo, BarChart2, Book, LayoutDashboard, LogOut } from 'lucide-react';
+import { Settings, Users, FolderKanban, Activity, ListTodo, BarChart2, Book, LayoutDashboard, LogOut, Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image'; 
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
@@ -11,6 +12,7 @@ import { NotificationBell } from '@/features/notifications/components/Notificati
 import { GlobalSearchModal } from '@/features/search/components/GlobalSearchModal';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
+import { useTheme } from 'next-themes';
 
 export const WorkspaceSidebar = () => {
   const { activeWorkspaceId } = useWorkspaceStore();
@@ -20,6 +22,14 @@ export const WorkspaceSidebar = () => {
   const queryClient = useQueryClient();
   const params = useParams();
   const projectId = params.projectId as string | undefined;
+
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Next.js Hydration uyumsuzluğunu önlemek için
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!activeWorkspaceId) return null;
 
@@ -97,7 +107,6 @@ export const WorkspaceSidebar = () => {
 
   return (
     <div className="w-64 border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex flex-col h-full">
-      {/* YENİ: Logo Alanı */}
       <div className="h-16 flex items-center px-4 border-b border-zinc-200 dark:border-zinc-800">
         <Link href="/workspaces" className="flex items-center gap-3 transition-opacity hover:opacity-80">
             <Image 
@@ -152,13 +161,28 @@ export const WorkspaceSidebar = () => {
                 </span>
                 <span className="text-xs text-zinc-500 truncate">{user?.email}</span>
             </div>
-            <button 
-                onClick={handleLogout}
-                className="p-2 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
-                title="Log out"
-            >
-                <LogOut size={18} />
-            </button>
+            
+            <div className="flex items-center gap-1">
+                {/* Tema Değiştirme Butonu */}
+                {mounted && (
+                    <button
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        className="p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 dark:hover:text-white dark:hover:bg-zinc-800 rounded-md transition-colors"
+                        title="Toggle theme"
+                    >
+                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                    </button>
+                )}
+
+                {/* Çıkış Yap Butonu */}
+                <button 
+                    onClick={handleLogout}
+                    className="p-2 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
+                    title="Log out"
+                >
+                    <LogOut size={18} />
+                </button>
+            </div>
         </div>
       </div>
     </div>
